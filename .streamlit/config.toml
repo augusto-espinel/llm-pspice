@@ -1,0 +1,6 @@
+[general]
+email = ""
+
+[client]
+showErrorDetails = false
+maxUploadSize = 200
