@@ -137,9 +137,23 @@ with col1:
         # Add user message to chat
         st.session_state.chat_history.append(('user', user_input))
 
-        # Get LLM response
+        # Get LLM response with progress indicator
         with st.chat_message("assistant"):
-            with st.spinner("LLM is designing your circuit..."):
+            # Determine spinner text based on provider
+            provider = st.session_state.llm_provider
+            if provider == "Ollama" and st.session_state.ollama_use_cloud:
+                spinner_text = f"🔄 Calling Ollama Cloud model: {st.session_state.ollama_model}...\n(This may take 30-90 seconds)"
+                info_text = f"ℹ️ Using cloud model: **{st.session_state.ollama_model}**"
+            elif provider == "Ollama":
+                spinner_text = f"🔄 Using local Ollama model: {st.session_state.ollama_model}..."
+                info_text = f"ℹ️ Using local model: **{st.session_state.ollama_model}**"
+            else:
+                spinner_text = f"🔄 Calling {provider} API..."
+                info_text = f"ℹ️ Using provider: **{provider}**"
+
+            st.info(info_text)
+
+            with st.spinner(spinner_text):
                 # Initialize orchestrator with selected provider from session state
                 provider = st.session_state.llm_provider
                 provider_key = provider.lower().replace(" ", "")
@@ -190,16 +204,41 @@ with col1:
                         # Show generated code (only once)
                         st.code(circuit_code, language='python')
 
-                        # Run simulation
-                        with st.spinner("Running simulation..."):
+                        # Run simulation with progress indicator
+                        st.markdown("---")
+                        st.info("⚙️ Validating circuit and running simulation...")
+
+                        with st.spinner("🔍 Validating circuit code..."):
+                            import time
+                            time.sleep(0.5)  # Small delay to show validation message
+
+                        with st.spinner("⚡ Running Ngspice simulation...\n(This may take 10-30 seconds depending on circuit complexity)"):
                             try:
                                 builder = CircuitBuilder()
                                 results = builder.run_simulation(circuit_code)
                                 st.session_state.simulation_results = results
 
-                                # Debug info
+                                # Enhanced error handling
                                 if results.get('error'):
-                                    st.error(f"❌ Simulation error: {results['error']}")
+                                    # Use enhanced error handler for simulation errors
+                                    from error_handler import ErrorCategory
+                                    error_msg = results['error']
+
+                                    if 'duplicate declaration' in error_msg.lower() or 'ngcomplex' in error_msg.lower():
+                                        category = ErrorCategory.CIRCUIT_INVALID
+                                        st.error(f"❌ Circuit Simulation Error\n\n{error_msg}")
+                                        st.warning("💡 This is a PySpice initialization issue. Try refreshing the page.")
+                                    elif 'convergence' in error_msg.lower() or 'singular' in error_msg.lower():
+                                        category = ErrorCategory.SIMULATION_FAILED
+                                        st.error(f"❌ Simulation Failed\n\n{error_msg}")
+                                        st.info("💡 Try adjusting component values or simulation parameters.")
+                                    else:
+                                        st.error(f"❌ Simulation error: {error_msg}")
+
+                                    # Always show technical details for debugging
+                                    with st.expander("🔧 Technical Details"):
+                                        st.code(f"Error type: {results.get('error_type', 'Unknown')}\n\n{error_msg}", language='text')
+
                                 elif not results.get('data') or len(results['data']) == 0:
                                     st.warning("⚠️ Simulation ran but produced no data. This might be due to:")
                                     st.warning("- Missing 'analysis = simulator.transient(...)'")
@@ -210,8 +249,13 @@ with col1:
                                     st.success(f"✅ Simulation completed! Found {len(results['data'])} data points.")
 
                             except Exception as e:
-                                st.error(f"❌ Simulation failed: {str(e)}")
-                                st.code(f"Error type: {type(e).__name__}", language='text')
+                                # Use enhanced error handler for all exceptions
+                                from error_handler import handle_llm_error
+                                error_message = handle_llm_error(e, context="Circuit simulation")
+                                st.error(error_message)
+
+                                with st.expander("🔧 Technical Details"):
+                                    st.code(f"Error type: {type(e).__name__}\n\n{str(e)}", language='text')
 
 # Right column: Simulation results
 with col2:

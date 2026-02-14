@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import sys
 import io
+from error_handler import handle_llm_error, validate_circuit_code
 
 class CircuitBuilder:
     """
@@ -119,6 +120,11 @@ class CircuitBuilder:
                 'analysis': None,
                 'simulator': None  # Pre-declare simulator
             }
+
+            # Pre-simulation validation
+            is_valid, validation_error = validate_circuit_code(filtered_code)
+            if not is_valid:
+                raise ValueError(f"❌ Circuit validation failed:\n\n{validation_error}")
 
             # Execute the filtered circuit code
             try:
