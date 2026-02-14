@@ -23,7 +23,7 @@ A Streamlit-based interface that lets you chat with an LLM to design, build, and
 |-----------|------|------|
 | **Simulation** | PySpice + Ngspice | Python objects, not text netlists ✅ |
 | **UI** | Streamlit | Build UI in pure Python in minutes ✅ |
-| **LLM** | OpenAI API (GPT-4/3.5) | Circuit design automation ✅ |
+| **LLM** | Multi-provider support | OpenAI, Gemini, Claude, DeepSeek, Ollama (local & cloud) ✅ |
 | **Data/Vis** | Pandas + Matplotlib | CSV export + waveform plotting ✅ |
 
 ## 🚀 Quick Start
@@ -52,7 +52,7 @@ pip install -r requirements.txt
 
 ### Configuration
 
-**Optional: Add OpenAI API Key**
+**Option 1: OpenAI API Key**
 
 Create a `.env` file in the project root:
 
@@ -60,9 +60,34 @@ Create a `.env` file in the project root:
 OPENAI_API_KEY=your_api_key_here
 ```
 
+**Option 2: Ollama Cloud (Recommended for free users)**
+
+1. Get your Ollama Cloud API key:
+   ```bash
+   ollama cloud key
+   ```
+
+2. In the app sidebar:
+   - Select "Ollama" as LLM Provider
+   - Check "Use Ollama Cloud"
+   - Paste your API key
+   - Select a working model (recommended: `cogito-2.1:671b`)
+
+See `OLLAMA_CLOUD_GUIDE.md` for more details.
+
+**Option 3: Local Ollama**
+
+1. Install Ollama: https://ollama.com
+2. Pull a model: `ollama pull deepseek-r1:8b`
+3. In the app sidebar, select "Ollama" with cloud disabled
+
 **Without an API key:**
 - The app will use **fallback templates** for common circuits
 - Not as powerful, but still functional for basic demos
+
+**Gemini, Claude, DeepSeek:**
+
+These providers are also supported - enter your API key in the sidebar after selecting the provider.
 
 ### Running the App
 
@@ -108,12 +133,18 @@ Try these in the chat:
 ```
 llm-sim-poc/
 │
-├── app.py                    # Streamlit UI (chat + plots)
-├── circuit_builder.py        # PySpice circuit integration
-├── llm_orchestrator.py       # LLM interface + code generation
-├── requirements.txt          # Python dependencies
-├── README.md                 # This file
-└── .env                      # API keys (create yourself)
+├── app.py                       # Streamlit UI (chat + plots)
+├── circuit_builder.py           # PySpice circuit integration
+├── llm_orchestrator.py          # LLM interface + multi-provider support
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file
+├── .env.example                 # API key template
+├── saved_api_keys.json          # Saved API keys (auto-generated)
+│
+├── OLLAMA_CLOUD_GUIDE.md        # Ollama Cloud setup guide
+├── OLLAMA_CLOUD_TROUBLESHOOTING.md  # Known issues & fixes
+│
+└── test_*.py                    # Test scripts for development
 ```
 
 ## 🔧 How It Works
@@ -178,15 +209,25 @@ analysis = circuit.simulator().transient(
 3. **Circuit Complexity**: Limited to linear components (no diodes, transistors in fallback mode)
 4. **Error Handling**: Basic error display (no circuit validation pre-simulation)
 
+## 🚀 Current Features ✅
+
+- [x] Multi-provider LLM support (OpenAI, Gemini, Claude, DeepSeek, Ollama)
+- [x] Ollama Cloud API integration with model selection
+- [x] Local Ollama model support
+- [x] API key persistence across sessions
+- [x] Model dropdowns for easy selection
+- [x] Fixed PySpice duplicate declaration errors
+- [x] Fixed duplicate output (extract first code block)
+
 ## 🚀 Future Enhancements
 
 - [ ] Add support for non-linear components (diodes, transistors)
 - [ ] Circuit schematic visualization (circuit diagram rendering)
-- [ ] Multiple LLM providers (Google Gemini, Anthropic Claude)
 - [ ] Circuit library (save/load designs)
 - [ ] AC analysis (frequency response, Bode plots)
 - [ ] Parameter sweep (vary R, C, L values automatically)
 - [ ] Comparative simulations (compare multiple designs)
+- [ ] Enhanced error validation (pre-simulation checks)
 
 ## 📖 Resources
 
