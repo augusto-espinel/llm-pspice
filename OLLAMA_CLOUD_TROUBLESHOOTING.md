@@ -162,6 +162,25 @@ python test_ollama_cloud.py
 
 ## Known Issues
 
+### Issue: GLM models (glm-4.7, glm-5) return empty responses
+
+**Status:** Confirmed - These models return HTTP 200 status but with empty content.
+
+**Symptoms:**
+- API call succeeds (200 status code)
+- No error message appears
+- But the generated response content is empty
+
+**Cause:** Model configuration issue in Ollama Cloud API.
+
+**Solution:** Use the recommended working models instead:
+- `cogito-2.1:671b` (recommended)
+- `qwen3-coder:480b` (excellent for coding)
+- `deepseek-v3.1:671b` (good for reasoning)
+- `kimi-k2:1t` (general purpose)
+
+These models are tested and produce consistent, reliable responses.
+
 ### Issue: Ollama Cloud endpoint changed
 
 **Status:** Happens occasionally as Ollama evolves their API.

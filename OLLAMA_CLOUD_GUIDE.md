@@ -29,21 +29,38 @@ Based on Ollama's latest API, these cloud models are available:
 
 ### Recommended Models
 
+**Tested and Working (Recommended):**
+
 | Model | Description | Use Case |
 |-------|-------------|----------|
-| `glm-5` | Latest GLM model | General purpose, high quality |
-| `glm-4.7` | High performance | Coding, technical tasks |
-| `glm-4.6` | Previous generation | Good performance, lower cost |
+| `cogito-2.1:671b` | Cogito 2.1 | Balanced, reliable, recommended |
+| `qwen3-coder:480b` | Qwen 3 Coder | Coding specialist |
+| `deepseek-v3.1:671b` | DeepSeek V3.1 | Coding, math, reasoning |
+| `kimi-k2:1t` | Kimi K2 1T参数 | High quality, technical tasks |
+
+**Available but Untested (try at your own risk):**
+
+| Model | Description | Use Case |
+|-------|-------------|----------|
+| `glm-4.6` | Previous generation GLM | Good performance, lower cost |
 | `deepseek-v3.2` | DeepSeek's latest | Coding, math, reasoning |
 | `gpt-oss:120b` | Open-source GPT | High quality generation |
 | `minimax-m2.1` | MiniMax 2.1 | Efficient, good quality |
 | `gemini-3-flash-preview` | Flash preview | Fast responses |
 
+**Known Issues:**
+
+| Model | Status | Issue |
+|-------|--------|-------|
+| `glm-4.7` | ⚠️ Works but empty responses | Model returns 200 status with no content |
+| `glm-5` | ⚠️ Works but empty responses | Model returns 200 status with no content |
+
+> **Note:** GLM-4.7 and GLM-5 appear in your catalog but currently return empty responses. This may be due to model configuration or API limitations. Use the recommended models above instead.
+
 ### Specialized Models
 
 | Model | Description |
 |-------|-------------|
-| `qwen3-coder:480b` | Coding specialist |
 | `qwen3-next:80b` | Next-generation Qwen |
 | `ministral-3:8b` | Lightweight Mistral |
 | `ministral-3:14b` | Balanced Mistral |
