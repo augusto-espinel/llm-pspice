@@ -97,7 +97,7 @@ class LLMOrchestrator:
                 return self._generate_fallback_code(user_request)
         except Exception as e:
             # Use enhanced error handling
-            return handle_llm_error(e, user_request, context=f"LLM request to {self.provider}")"
+            return handle_llm_error(e, user_request, context=f"LLM request to {self.provider}")
     
     def _openai_compatible_request(self, user_request, system_prompt):
         """Request for OpenAI-compatible APIs (OpenAI, DeepSeek, Ollama)"""
