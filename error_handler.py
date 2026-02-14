@@ -48,7 +48,7 @@ class CircuitErrorHandler:
         ],
         ErrorCategory.MODEL_NOT_FOUND: [
             r'model not found',
-            r"model '.*' does not exist",
+            r"model ['\"].*['\"] (not found|does not exist)",
             r'invalid model',
             r'unknown model'
         ],
