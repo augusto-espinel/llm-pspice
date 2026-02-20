@@ -9,6 +9,7 @@ import re
 import json
 import requests
 from error_handler import handle_llm_error, ErrorCategory
+from issue_logger import log_api_error, log_timeout
 
 class LLMOrchestrator:
     """
@@ -125,6 +126,14 @@ class LLMOrchestrator:
             error_msg = str(e)
             print(f"API call failed: {error_msg}")
 
+            # Log the API error
+            log_api_error(
+                prompt=user_request,
+                error_message=error_msg,
+                llm_model=model,
+                provider=self.provider
+            )
+
             # Help user diagnose connection issues
             if "Connection error" in error_msg or "connection" in error_msg.lower():
                 if self.provider == "ollama" and self.use_cloud:
@@ -204,10 +213,25 @@ class LLMOrchestrator:
                     time.sleep(wait_time)
                     continue
                 else:
+                    # Log timeout
+                    log_timeout(
+                        prompt=user_request,
+                        error_message=f"Request timed out after {max_retries} attempts ({timeout}s each)",
+                        llm_model=model_name,
+                        provider=f"{self.provider} (cloud)"
+                    )
                     raise Exception(f"Request timed out after {max_retries} attempts ({timeout}s each)")
 
             except Exception as e:
                 error_msg = str(e)
+
+                # Log the API error
+                log_api_error(
+                    prompt=user_request,
+                    error_message=error_msg,
+                    llm_model=model_name,
+                    provider=f"{self.provider} (cloud)"
+                )
 
                 if "401" in error_msg or "unauthorized" in error_msg.lower():
                     return f"❌ Unauthorized: Your Ollama Cloud API key is invalid or expired.\n\n" \
@@ -325,27 +349,41 @@ class LLMOrchestrator:
     
     def _get_system_prompt(self):
         """
-        System prompt for the LLM
+        System prompt for the LLM (Ralph-improved version)
         """
-        return """You are an expert circuit designer and electrical engineer. 
+        return """You are an expert circuit designer and electrical engineer.
 
 Your task is to design electronic circuits based on user requests and generate Python code using PySpice that creates and simulates the circuit.
 
+CRITICAL: You MUST always generate a response with Python code in a ```python``` block.
+Never respond with just text - always include working circuit code.
+
+
+SIMULATION BEST PRACTICES:
+1. Include a DC path to ground for every node
+2. Use realistic component values (avoid 0 or extremely large values)
+3. Set appropriate simulation parameters:
+   - step_time: 0.1 to 1 us for typical circuits
+   - end_time: 1 to 10 ms to see transient behavior
+4. For transient analysis, use pulse sources instead of DC to see charging behavior
+
+
 IMPORTANT RULES:
-1. ALWAYS use the PySpice library - available symbols:
+1. Use PySpice library symbols:
    - Circuit() - creates a circuit object
-   - u_Ohm, u_kOhm - resistance units
+   - u_Ohm, u_kOhm - resistance units (note: not u_MOhm)
    - u_V - voltage units
    - u_mA, u_A - current units
-   - u_F, u_uF, u_nF - capacitance units
+   - u_F, u_nF, u_pF - capacitance units (note: not u_uF, use u_nF for nano-farads)
    - u_H - inductance units
    - u_s, u_ms, u_us - time units
 
 2. Circuit components:
-   - Circuit.V('name', 'node+', 'node-', voltage) - voltage source
-   - Circuit.R('name', 'node+', 'node-', resistance) - resistor
-   - Circuit.C('name', 'node+', 'node-', capacitance) - capacitor
-   - Circuit.L('name', 'node+', 'node-', inductance) - inductor
+   - Circuit.V('name', 'node+', 'node-', voltage @ u_V) - DC voltage source
+   - Circuit.PulseVoltageSource('name', 'node+', 'node-', initial_value @ u_V, pulsed_value @ u_V, pulse_width @ u_ms, period @ u_ms, delay_time @ u_ms, rise_time @ u_ms, fall_time @ u_ms) - pulse source for transient analysis
+   - Circuit.R('name', 'node+', 'node-', resistance @ u_Ohm) - resistor
+   - Circuit.C('name', 'node+', 'node-', capacitance @ u_F) - capacitor
+   - Circuit.L('name', 'node+', 'node-', inductance @ u_H) - inductor
 
 3. Simulation:
    - Create simulator: simulator = circuit.simulator()
@@ -359,22 +397,30 @@ IMPORTANT RULES:
    - Include comments explaining the circuit
 
 5. Analysis parameters:
-   - step_time: Typically 0.1 to 1 µs (use @ u_us)
+   - step_time: Typically 0.1 to 1 us (use @ u_us)
    - end_time: Typically 1 to 10 ms (use @ u_ms)
 
 Example response format:
 ```python
-# RC low-pass filter circuit
+# RC low-pass filter circuit with pulse source
 from PySpice.Spice.Netlist import Circuit
 from PySpice.Unit import *
 
 circuit = Circuit('RC_Filter')
-circuit.V('input', 'n1', circuit.gnd, 10 @ u_V)
+# Pulse source: 0V to 10V step, 1ms pulse width, 2ms period
+circuit.PulseVoltageSource('input', 'n1', circuit.gnd,
+    initial_value=0 @ u_V,
+    pulsed_value=10 @ u_V,
+    pulse_width=1 @ u_ms,
+    period=2 @ u_ms,
+    delay_time=0.001 @ u_ms,
+    rise_time=0.001 @ u_ms,
+    fall_time=0.001 @ u_ms)
 circuit.R(1, 'n1', 'n2', 1 @ u_kOhm)
-circuit.C(1, 'n2', circuit.gnd, 10 @ u_F)
+circuit.C(1, 'n2', circuit.gnd, 10 @ u_nF)
 
 simulator = circuit.simulator()
-analysis = simulator.transient(step_time=0.1 @ u_us, end_time=10 @ u_ms)
+analysis = simulator.transient(step_time=1 @ u_us, end_time=10 @ u_ms)
 ```
 
 Design safe, practical circuits. If uncertain about values, use common standard values and explain your design choices."""

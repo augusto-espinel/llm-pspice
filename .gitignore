@@ -3,3 +3,24 @@ saved_api_keys.json
 __pycache__/
 *.pyc
 .DS_Store
+
+# Ignore simulation data (stored outside workspace context)
+# All simulation outputs are stored in ~/.openclaw/simulation_data/llm-pspice/
+# This gitignore prevents accidental commits if data is created in-tree.
+simulation_data/
+*.csv
+*.txt
+*.npz
+*.png
+*.jpg
+*.jpeg
+
+# benchmark data files (large)
+benchmark_*.npz
+benchmark_*.csv
+benchmark_*.png
+comparison_*.png
+
+# test output files
+test_*.txt
+results_*.txt

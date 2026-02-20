@@ -391,7 +391,11 @@ def validate_circuit_code(code):
     Returns:
         tuple: (is_valid, error_message)
     """
-    required_elements = ['circuit', 'Circuit(', 'analysis', '.transient(']
+    required_elements = ['circuit', 'Circuit(', 'analysis']
+
+    # Check for either transient or AC analysis
+    if '.transient(' not in code and '.ac(' not in code:
+        return False, "Missing required element: .transient( or .ac("
 
     for element in required_elements:
         if element not in code:
