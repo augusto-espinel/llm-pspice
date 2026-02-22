@@ -383,7 +383,14 @@ def handle_llm_error(error, user_request="", context=""):
 
 def validate_circuit_code(code):
     """
-    Validate circuit code before simulation
+    Validate circuit code before simulation (IMPROVED - 2026-02-22)
+
+    Simplified, robust validation that checks for analysis assignment properly.
+    Handles multi-line assignments like:
+      analysis = circuit.simulator().transient(
+          step_time=1 @ u_ms,
+          end_time=10 @ u_ms
+      )
 
     Args:
         code (str): The circuit code to validate
@@ -391,28 +398,44 @@ def validate_circuit_code(code):
     Returns:
         tuple: (is_valid, error_message)
     """
-    required_elements = ['circuit', 'Circuit(', 'analysis']
+    # Remove comments to avoid false positives
+    code_no_comments = re.sub(r'#.*$', '', code, flags=re.MULTILINE)
 
-    # Check for either transient or AC analysis
+    # Check for circuit creation
+    if 'Circuit(' not in code:
+        return False, "Missing circuit creation (Circuit('name'))"
+
+    # Check for circuit assignment (must be outside comments)
+    if not re.search(r'circuit\s*=\s*Circuit\(', code_no_comments):
+        return False, "Missing circuit assignment (circuit = Circuit('name'))"
+
+    # Check for transient or AC analysis call
     if '.transient(' not in code and '.ac(' not in code:
-        return False, "Missing required element: .transient( or .ac("
+        return False, "Missing simulation method (.transient() or .ac())"
 
-    for element in required_elements:
-        if element not in code:
-            return False, f"Missing required element: {element}"
+    # Check for analysis assignment - look for "analysis = ..." followed by transient/ac
+    # This handles multi-line assignments
+    lines = code.split('\n')
+    for i, line in enumerate(lines):
+        line_stripped = line.strip()
 
-    # Check for common issues
-    issues = []
+        # Skip comment-only lines and empty lines
+        if not line_stripped or line_stripped.startswith('#'):
+            continue
 
-    # Check for proper unit annotations
-    if '@' not in code:
-        issues.append("No unit annotations found (use @ u_V, @ u_Ohm, etc.)")
+        # Remove inline comments
+        line_no_comment = re.sub(r'#.*$', '', line).strip()
 
-    # Check for ground reference
-    if 'gnd' not in code:
-        issues.append("No ground reference found (circuit.gnd)")
+        # Check for: analysis = ...
+        if re.match(r'^analysis\s*=.*', line_no_comment):
+            # Found analysis assignment - check if followed by transient/ac
+            # Look at this line and the next few
+            next_lines = '\n'.join(lines[i:i+5])
+            next_lines_no_comments = re.sub(r'#.*$', '', next_lines, flags=re.MULTILINE)
 
-    if issues:
-        return False, "Circuit validation issues:\n" + "\n".join(f"• {issue}" for issue in issues)
+            if '.transient(' in next_lines_no_comments or '.ac(' in next_lines_no_comments:
+                # Good - analysis is assigned with simulation method
+                return True, None
 
-    return True, None
+    # If we get here, no proper analysis assignment found
+    return False, "Missing analysis assignment (should be: analysis = variable.function().transient(...) or analysis = variable.function().ac(...))"

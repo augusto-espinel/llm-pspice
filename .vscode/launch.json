@@ -1,0 +1,74 @@
+{
+    // VS Code Debug Configuration for Streamlit App
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Streamlit: Run App",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "run",
+                "app.py"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONIOENCODING": "UTF-8"
+            },
+            "justMyCode": true
+        },
+        {
+            "name": "Streamlit: Debug App",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "run",
+                "app.py",
+                "--logger.level=debug"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONIOENCODING": "UTF-8",
+                "STREAMLIT_SERVER_HEADLESS": "true",
+                "STREAMLIT_SERVER_RUN_ON_SAVE": "true"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Circuit Builder Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/debug/standalone_test.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONIOENCODING": "UTF-8"
+            },
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Ralph Fixer",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/ralph_fixer.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONIOENCODING": "UTF-8"
+            },
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Debug with Args (Custom)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/${input:scriptName}",
+            "args": "${input:args}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONIOENCODING": "UTF-8"
+            }
+        }
+    ]
+}

@@ -338,12 +338,14 @@ with col1:
                                         st.code(f"Error type: {results.get('error_type', 'Unknown')}\n\n{error_msg}", language='text')
 
                                 elif not results.get('data') or len(results['data']) == 0:
-                                    # Log empty data issue
+                                    # Log empty data issue with debug information
+                                    debug_info = results.get('debug_info', {})
                                     log_empty(
                                         prompt=user_input,
                                         llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
                                         provider=provider,
-                                        context="Simulation produced no data"
+                                        context="Simulation produced no data",
+                                        debug_info=debug_info
                                     )
                                     st.warning("⚠️ Simulation ran but produced no data. This might be due to:")
                                     st.warning("- Missing 'analysis = simulator.transient(...)'")
@@ -352,6 +354,26 @@ with col1:
                                     st.info("💡 Make sure your code defines: circuit + simulator + analysis")
                                 else:
                                     st.success(f"✅ Simulation completed! Found {len(results['data'])} data points.")
+
+                                    # Show debug info if available and debug mode enabled
+                                    if st.session_state.get('show_debug_info', False):
+                                        with st.expander("🔍 Debug Information"):
+                                            # Show debug info
+                                            if results.get('debug_info'):
+                                                st.subheader("Analysis Object")
+                                                debug_info = results['debug_info']
+                                                st.json(debug_info)
+
+                                                if not debug_info.get('has_time'):
+                                                    st.warning("⚠️ Analysis object missing 'time' attribute")
+                                                if not debug_info.get('has_nodes'):
+                                                    st.warning("⚠️ Analysis object missing 'nodes' attribute")
+
+                                            # Show filtered circuit code
+                                            if results.get('filtered_code'):
+                                                st.subheader("Filtered Circuit Code (After LLM Fixes)")
+                                                with st.empty():
+                                                    st.code(results['filtered_code'], language='python')
 
                             except Exception as e:
                                 # Use enhanced error handler for all exceptions

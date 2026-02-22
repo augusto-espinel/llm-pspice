@@ -2,6 +2,10 @@
 
 # Python path - using conda environment with working PySpice setup
 $CONDA_PYTHON = "C:\Users\augus\anaconda3\envs\pyspice\python.exe"
+$CONDA_NGSPICE = "C:\Users\augus\anaconda3\envs\pyspice\Library\bin"
+
+# Prepend conda ngspice to PATH to override system version
+$env:PATH = "$CONDA_NGSPICE;$env:PATH"
 
 Write-Host "================================================================="
 Write-Host " LLM Circuit Simulator - PySpice Environment"
@@ -9,6 +13,7 @@ Write-Host "================================================================="
 Write-Host ""
 Write-Host "Conda Python: $CONDA_PYTHON"
 Write-Host "PySpice version: 1.5"
+Write-Host "ngspice path: $CONDA_NGSPICE"
 Write-Host "ngspice version: 38 (via conda)"
 Write-Host "Python version: 3.10"
 Write-Host ""

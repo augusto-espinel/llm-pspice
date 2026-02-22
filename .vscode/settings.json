@@ -1,0 +1,25 @@
+{
+    // VS Code Settings for Python/Streamlit Development
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
+    },
+    "python.defaultInterpreterPath": "C:\\Users\\augus\\anaconda3\\envs\\pyspice\\python.exe",
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/test_outputs": false
+    },
+    "debug.console.closeOnEnd": false,
+    "debug.openDebug": "keepOpen",
+    "debug.internalConsoleOptions": "openOnSessionStart",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.launchArgs": []
+}

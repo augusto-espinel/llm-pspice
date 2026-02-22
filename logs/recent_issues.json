@@ -1,0 +1,300 @@
+﻿      "original_count": 1,
+      "compression_ratio": "1:1"
+    },
+    "resolution": "Applied fix: enhanced_system_prompt",
+    "resolved_at": "2026-02-17T23:11:16.768695+00:00"
+  },
+  {
+    "id": 14,
+    "timestamp": "2026-02-17T21:59:37.496143",
+    "prompt": "[3 additional empty_output issues compressed]",
+    "issue_type": "empty_output",
+    "error_message": "Multiple similar issues - see representative samples",
+    "llm_response": "",
+    "llm_model": "various",
+    "provider": "ollama",
+    "context": "Compressed 3 similar issues",
+    "status": "resolved",
+    "attempts": 0,
+    "fix_attempt": null,
+    "compressed": {
+      "original_count": 3,
+      "compression_ratio": "3:1"
+    },
+    "resolution": "Applied fix: enhanced_system_prompt",
+    "resolved_at": "2026-02-17T23:11:16.768721+00:00"
+  },
+  {
+    "id": 15,
+    "timestamp": "2026-02-16T01:58:02.666893",
+    "prompt": "Create an RC circuit",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "llm_response": "",
+    "llm_model": "glm-4.7",
+    "provider": "ollama",
+    "context": "",
+    "status": "resolved",
+    "attempts": 0,
+    "fix_attempt": null,
+    "resolution": "Applied fix: enhanced_system_prompt",
+    "resolved_at": "2026-02-17T23:11:16.768725+00:00"
+  },
+  {
+    "timestamp": "2026-02-16T10:00:31.704065",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama",
+      "context": "Simulation produced no data"
+    },
+    "status": "resolved",
+    "id": 16,
+    "resolution": "Applied fix: enhanced_system_prompt",
+    "resolved_at": "2026-02-17T23:11:16.768727+00:00"
+  },
+  {
+    "id": 17,
+    "timestamp": "2026-02-17T21:59:37.496169",
+    "prompt": "[3 additional no_code_block issues compressed]",
+    "issue_type": "no_code_block",
+    "error_message": "Multiple similar issues - see representative samples",
+    "llm_response": "",
+    "llm_model": "various",
+    "provider": "ollama",
+    "context": "Compressed 3 similar issues",
+    "status": "resolved",
+    "attempts": 0,
+    "fix_attempt": null,
+    "compressed": {
+      "original_count": 3,
+      "compression_ratio": "3:1"
+    },
+    "resolution": "Applied fix: enhanced_system_prompt",
+    "resolved_at": "2026-02-17T23:11:16.768730+00:00"
+  },
+  {
+    "id": 18,
+    "timestamp": "2026-02-16T01:58:02.667621",
+    "prompt": "Build a voltage divider",
+    "issue_type": "no_code_block",
+    "error_message": "",
+    "llm_response": "Sure, I can build a voltage divider for you.",
+    "llm_model": "deepseek-r1",
+    "provider": "ollama",
+    "context": "",
+    "status": "resolved",
+    "attempts": 0,
+    "fix_attempt": null,
+    "resolution": "Applied fix: enhanced_system_prompt",
+    "resolved_at": "2026-02-17T23:11:16.768732+00:00"
+  },
+  {
+    "id": 19,
+    "timestamp": "2026-02-17T21:59:37.496178",
+    "prompt": "[3 additional simulation_error issues compressed]",
+    "issue_type": "simulation_error",
+    "error_message": "Multiple similar issues - see representative samples",
+    "llm_response": "",
+    "llm_model": "various",
+    "provider": "ollama",
+    "context": "Compressed 3 similar issues",
+    "status": "resolved",
+    "attempts": 0,
+    "fix_attempt": null,
+    "compressed": {
+      "original_count": 3,
+      "compression_ratio": "3:1"
+    },
+    "resolution": "Fix applied: Unit validator and improved system prompt resolved underlying issues",
+    "resolved_at": "2026-02-17T23:22:33.346313+00:00"
+  },
+  {
+    "id": 20,
+    "timestamp": "2026-02-16T01:58:02.668495",
+    "prompt": "Create a simple circuit",
+    "issue_type": "simulation_error",
+    "error_message": "singular matrix: check connections",
+    "llm_response": "",
+    "llm_model": "llama3",
+    "provider": "ollama",
+    "context": "",
+    "status": "resolved",
+    "attempts": 0,
+    "fix_attempt": null,
+    "resolution": "Applied fix: enhanced_system_prompt",
+    "resolved_at": "2026-02-17T23:11:16.768734+00:00"
+  },
+  {
+    "timestamp": "2026-02-16T10:01:07.594572",
+    "prompt": " Simulation ran but produced no data. This might be due to:\n\nMissing 'analysis = simulator.transient(...)'\nIncorrect node names or variables\nSimulation parameters (step_time, end_time) may be too small\nðŸ’¡ Make sure your code defines: circuit + simulator + analysis",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_uF' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "status": "resolved",
+    "id": 21,
+    "resolution": "Manual fix: Updated unit typos in fallback code",
+    "resolved_at": "2026-02-17T23:22:09.272084+00:00",
+    "fix_attempt": {
+      "strategy": "manual_code_fix",
+      "timestamp": "2026-02-17T23:22:09.272098+00:00"
+    }
+  },
+  {
+    "id": 22,
+    "timestamp": "2026-02-17T21:59:56.650331+00:00",
+    "prompt": "[1 API errors compressed] - Models ['multiple']",
+    "issue_type": "api_error",
+    "error_message": "Multiple API errors: models not available on Ollama Cloud",
+    "llm_response": "",
+    "llm_model": "multiple",
+    "provider": "ollama",
+    "context": "{\"total_occurrences\": 1, \"models_involved\": {\"multiple\": 1}, \"unique_prompts\": 1, \"example_prompt\": \"[576 API errors compressed] - Models ['glm-4.7', 'deepseek-r1', 'llama3']\"}",
+    "status": "resolved",
+    "attempts": 0,
+    "fix_attempt": null,
+    "compressed": {
+      "original_count": 1,
+      "compression_ratio": "1:1"
+    },
+    "resolution": "Applied fix: fallback",
+    "resolved_at": "2026-02-17T23:11:16.768736+00:00"
+  },
+  {
+    "timestamp": "2026-02-18T00:29:40.480243",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama",
+      "context": "Empty response received from LLM"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T00:29:40.497936",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz",
+    "issue_type": "no_code_block",
+    "error_message": "",
+    "metadata": {
+      "llm_response": "",
+      "llm_model": "glm-4.7",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T00:30:21.431345",
+    "prompt": "Design a voltage divider with 12V input",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama",
+      "context": "Simulation produced no data"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T00:38:28.039673",
+    "prompt": "Create a simple RC low-pass filter with R=1k, C=10nF",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama",
+      "context": "Simulation produced no data"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T20:09:47.738595",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama",
+      "context": "Simulation produced no data"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T20:11:53.278213",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "simulation_error",
+    "error_message": "Unknown argument pulse=(0, 5, 0, PeriodValue(1 Î¼s), PeriodValue(1 Î¼s), PeriodValue(0.5 ms), PeriodValue(1 ms))",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T20:20:12.020266",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama",
+      "context": "Simulation produced no data"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T20:22:50.700868",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "simulation_error",
+    "error_message": "âŒ Circuit validation failed:\n\nMissing required element: analysis",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T20:35:07.560812",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama",
+      "context": "Simulation produced no data"
+    }
+  },
+  {
+    "id": 32,
+    "timestamp": "2026-02-18T20:37:41.420830",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "api_error",
+    "error_message": "Error code: 404 - {'error': {'message': \"model 'glm-4.7' not found\", 'type': 'api_error', 'param': None, 'code': None}}",
+    "llm_response": "",
+    "llm_model": "glm-4.7",
+    "provider": "ollama",
+    "context": "",
+    "status": "open",
+    "attempts": 0,
+    "fix_attempt": null
+  },
+  {
+    "timestamp": "2026-02-18T20:40:08.875316",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "simulation_error",
+    "error_message": "âŒ Circuit validation failed:\n\nMissing required element: analysis",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-02-18T20:40:37.852285",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama",
+      "context": "Simulation produced no data"
+    }
+  }
+]

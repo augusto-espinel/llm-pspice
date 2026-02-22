@@ -1,4 +1,4 @@
-"""
+﻿"""
 Circuit Builder - PySpice Integration
 Builds and simulates circuits from Python code
 
@@ -108,7 +108,7 @@ class CircuitBuilder:
         """
         Create a pulse voltage source for transient analysis
 
-        Creates a step input (0V → voltage) with near-instant rise time.
+        Creates a step input (0V â†' voltage) with near-instant rise time.
         Pulse sources show correct transient behavior, unlike DC sources.
 
         Args:
@@ -196,7 +196,7 @@ class CircuitBuilder:
                     plus_str = node_plus
                 else:
                     plus_str = f"'{node_plus}'"
-                    
+
                 if node_minus.startswith('circuit.') or node_minus.startswith('simulator.'):
                     minus_str = node_minus
                 else:
@@ -227,10 +227,10 @@ class CircuitBuilder:
     def run_simulation(self, circuit_code):
         """
         Execute circuit code and run simulation
-        
+
         Args:
             circuit_code (str): Python code that builds a PySpice circuit
-            
+
         Returns:
             dict: Simulation results with plots and data
         """
@@ -239,7 +239,7 @@ class CircuitBuilder:
             'data': None,
             'error': None
         }
-        
+
         try:
             # Filter out PySpice import statements to avoid duplicate initialization errors
             # LLM-generated code often includes imports which cause Ngspice to re-initialize
@@ -258,7 +258,25 @@ class CircuitBuilder:
             filtered_code = fix_pyspice_units(filtered_code)
             if filtered_code != original_code:
                 print(f"\n[INFO] Fixed PySpice unit typos in generated code")
-                print("[INFO] Common typos: u_uF → u_nF, u_MOhm → u_kOhm\n")
+                print("[INFO] Common typos: u_uF â†' u_nF, u_MOhm â†' u_kOhm\n")
+
+            # Fix common LLM error: circuit.Sinusoidal â†' circuit.SinusoidalVoltageSource
+            # LLM often generates: circuit.Sinusoidal('name', ...)
+            # Correct pattern: circuit.SinusoidalVoltageSource('name', ...)
+            original_code = filtered_code
+            filtered_code = re.sub(r'circuit\.Sinusoidal\(', 'circuit.SinusoidalVoltageSource(', filtered_code)
+            if filtered_code != original_code:
+                print(f"\n[INFO] Fixed sinusoidal source syntax")
+                print("[INFO] Changed: circuit.Sinusoidal() â†' circuit.SinusoidalVoltageSource()\n")
+
+            # Fix LLM error: Python keywords used as node names
+            # Common problem: 'in', 'out' are Python keywords and cause errors
+            original_code = filtered_code
+            filtered_code = re.sub(r"'in'", "'input_node'", filtered_code)  # Fix 'in' node name
+            filtered_code = re.sub(r'"in"', '"input_node"', filtered_code)  # Fix "in" (double quotes)
+            if filtered_code != original_code:
+                print(f"\n[INFO] Fixed Python keyword node names")
+                print("[INFO] Changed: 'in' â†' 'input_node'\n")
 
             # Create a namespace for executing the circuit code
             # We provide Pre-imported PySpice objects to avoid duplication
@@ -294,7 +312,7 @@ class CircuitBuilder:
             # Pre-simulation validation
             is_valid, validation_error = validate_circuit_code(filtered_code)
             if not is_valid:
-                raise ValueError(f"❌ Circuit validation failed:\n\n{validation_error}")
+                raise ValueError(f"âŒ Circuit validation failed:\n\n{validation_error}")
 
             # Execute the filtered circuit code
             try:
@@ -303,7 +321,7 @@ class CircuitBuilder:
                 error_msg = str(e)
                 if 'duplicate declaration' in error_msg.lower() or 'struct ngcomplex' in error_msg.lower():
                     raise ValueError(
-                        "❌ PySpice initialization error!\n\n"
+                        "âŒ PySpice initialization error!\n\n"
                         "This happens when the LLM-generated code includes PySpice import statements.\n"
                         "The code has been filtered, but an error still occurred.\n\n"
                         f"Technical error: {error_msg}\n\n"
@@ -317,13 +335,13 @@ class CircuitBuilder:
             self.circuit = namespace.get('circuit')
 
             if not self.circuit:
-                raise ValueError("❌ No circuit defined. Your code should create a 'circuit' variable using Circuit().")
+                raise ValueError("âŒ No circuit defined. Your code should create a 'circuit' variable using Circuit().")
 
             # Get analysis results
             analysis = namespace.get('analysis')
 
             if analysis is None:
-                raise ValueError("❌ No analysis results defined. Your code should create an 'analysis' variable using simulator.transient().")
+                raise ValueError("âŒ No analysis results defined. Your code should create an 'analysis' variable using simulator.transient().")
 
             # Debug: Print what we got
             print(f"\n=== DEBUG INFO ===")
@@ -338,12 +356,12 @@ class CircuitBuilder:
                 else:
                     print(f"Time: {analysis.time}")
             else:
-                print("⚠️ Warning: No time data found!")
+                print("âš ï¸ Warning: No time data found!")
 
             if hasattr(analysis, 'nodes'):
                 print(f"Analysis nodes: {analysis.nodes}")
             else:
-                print("⚠️ Warning: No nodes attribute found!")
+                print("âš ï¸ Warning: No nodes attribute found!")
 
             # List all available variables in the analysis
             print("\nAvailable variables:")
@@ -361,19 +379,39 @@ class CircuitBuilder:
 
             print("=== END DEBUG ===\n")
 
+            # Capture debug info before extraction (for empty_output analysis)
+            debug_info = {
+                'analysis_type': type(analysis).__name__,
+                'has_time': hasattr(analysis, 'time'),
+                'has_frequency': hasattr(analysis, 'frequency'),
+                'has_nodes': hasattr(analysis, 'nodes'),
+            }
+
+            # Check time length if available
+            if hasattr(analysis, 'time') and hasattr(analysis.time, '__len__'):
+                debug_info['time_length'] = len(analysis.time)
+
+            # Store debug info in results
+            results['debug_info'] = debug_info
+            results['filtered_code'] = filtered_code  # Store for debugging
+
             results['data'] = self._extract_analysis_data(analysis)
             results['plots'] = self._generate_plots(analysis)
 
             # Debug: Check results
             print(f"Data rows: {len(results['data']) if results['data'] else 0}")
             print(f"Plots: {len(results['plots'])}")
-            
+
+            # Add extraction debug info
+            if debug_info:
+                print(f"Debug info stored: {debug_info}")
+
         except Exception as e:
             results['error'] = str(e)
             results['error_type'] = type(e).__name__
-            
+
         return results
-    
+
     def _extract_analysis_data(self, analysis):
         """
         Extract numerical data from PySpice analysis
@@ -398,8 +436,7 @@ class CircuitBuilder:
                 return self._extract_ac_data(analysis)
 
             # Otherwise, assume transient analysis (has 'time' attribute)
-                print("No time data found in analysis")
-                return data
+            time = analysis.time
 
             # Convert time to numpy array if it isn't already
             if not isinstance(time, np.ndarray):
@@ -447,21 +484,38 @@ class CircuitBuilder:
                     # Try bracket notation first
                     try:
                         values = analysis[str(var_name)]
-                        print(f"✓ {var_name}: accessed via bracket notation")
+                        print(f"-> {var_name}: accessed via bracket notation")
                     except:
                         # Fall back to getattr
                         values = getattr(analysis, str(var_name))
-                        print(f"✓ {var_name}: accessed via getattr")
+                        print(f"-> {var_name}: accessed via getattr")
 
-                    # Convert unit to float
-                    if hasattr(values, 'value'):
-                        values = float(values.value)
-                    else:
-                        values = float(values)
+                    # Check type and convert appropriately
+                    # PySpice WaveForm objects have .values attribute with numpy array
+                    if hasattr(values, 'values'):
+                        # PySpice WaveForm - extract numpy array
+                        values_array = values.values
+                        print(f"  -> PySpice WaveForm, len={len(values_array)}")
 
-                    # Handle single value vs array
-                    if isinstance(values, np.ndarray) and len(values) == len(time):
-                        print(f"  -> Array of {len(values)} values: [{values[0]:.4f} ... {values[-1]:.4f}]")
+                        # Convert to numpy array if needed
+                        if not isinstance(values_array, np.ndarray):
+                            values_array = np.array(values_array)
+
+                        # Extract data point by point
+                        for i, t in enumerate(time):
+                            data.append({
+                                'time': float(t),
+                                'variable': str(var_name),
+                                'value': float(values_array[i])
+                            })
+                    elif hasattr(values, '__len__') and len(values) > 1:
+                        # Already an array-like object
+                        print(f"  -> Already array-like, len={len(values)}")
+
+                        # Ensure it's a numpy array
+                        if not isinstance(values, np.ndarray):
+                            values = np.array(values)
+
                         for i, t in enumerate(time):
                             data.append({
                                 'time': float(t),
@@ -469,16 +523,25 @@ class CircuitBuilder:
                                 'value': float(values[i])
                             })
                     else:
-                        # Single value - repeat for all time points
-                        print(f"  -> Single value: {values}")
+                        # Single scalar value
+                        if hasattr(values, 'value'):
+                            scalar_value = float(values.value)
+                        else:
+                            scalar_value = float(values)
+
+                        print(f"  -> Single scalar value: {scalar_value}")
+
+                        # Repeat for all time points
                         for i, t in enumerate(time):
                             data.append({
                                 'time': float(t),
                                 'variable': str(var_name),
-                                'value': float(values)
+                                'value': scalar_value
                             })
                 except Exception as e:
-                    print(f"✗ Error extracting '{var_name}': {e}")
+                    print(f"-> Error extracting '{var_name}': {e}")
+                    import traceback
+                    traceback.print_exc()
 
             print(f"Extracted {len(data)} data points total")
 
@@ -621,13 +684,22 @@ class CircuitBuilder:
                 try:
                     values = analysis[str(var_name)]
 
-                    # Convert unit to float
-                    if hasattr(values, 'value'):
+                    # Handle PySpice WaveForm objects
+                    if hasattr(values, 'values'):
+                        # PySpice WaveForm - extract numpy array
+                        values = values.values
+                    elif hasattr(values, 'value') and not hasattr(values, '__len__'):
+                        # Single value with unit
                         values = float(values.value)
+                    elif isinstance(values, np.ndarray):
+                        # Already a numpy array
+                        pass
                     else:
-                        values = float(values)
+                        # Try to convert to array
+                        values = np.array(values)
 
-                    if len(time) > 1 and (isinstance(values, np.ndarray) and len(values) > 1):
+                    # Plot if we have arrays
+                    if len(time) > 1 and len(values) == len(time):
                         ax.plot(time, values, label=str(var_name), linewidth=2)
                         plotted = True
                 except Exception as e:
@@ -650,7 +722,7 @@ class CircuitBuilder:
             traceback.print_exc()
 
         return plots
-    
+
     def create_simple_resistor_circuit(self):
         """
         Example: Create a simple resistor circuit
@@ -669,8 +741,8 @@ class CircuitBuilder:
         correct charging behavior. DC sources would show steady-state.
 
         Args:
-            R (float): Resistance in kΩ
-            C (float): Capacitance in µF
+            R (float): Resistance in kÎ©
+            C (float): Capacitance in ÂµF
             source_voltage (float): Source voltage in V
             duration (float): Simulation duration in ms
         """
@@ -702,8 +774,8 @@ class CircuitBuilder:
         Note: DC sources are fine here - no capacitors, so no transient behavior
 
         Args:
-            R1 (float): Top resistance in kΩ
-            R2 (float): Bottom resistance in kΩ
+            R1 (float): Top resistance in kÎ©
+            R2 (float): Bottom resistance in kÎ©
             source_voltage (float): Source voltage in V
         """
         circuit = Circuit('Voltage_Divider')
@@ -717,9 +789,9 @@ class CircuitBuilder:
 if __name__ == "__main__":
     # Test the circuit builder
     builder = CircuitBuilder()
-    
+
     # Test RC circuit
     circuit, analysis = builder.create_rc_circuit(R=1, C=10, source_voltage=10, duration=10)
-    
+
     print(f"Circuit: {builder.circuit}")
     print(f"Analysis type: {type(analysis)}")

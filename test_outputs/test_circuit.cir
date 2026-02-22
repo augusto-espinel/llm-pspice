@@ -1,0 +1,8 @@
+* Simple test circuit
+V1 1 0 10
+R1 1 2 1k
+C1 2 0 1u
+.tran 0.1m 10m
+.end
+
+quit

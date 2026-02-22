@@ -1,0 +1,24 @@
+{
+  "test_name": "test_2_complete_simulation",
+  "timestamp": "2026-02-22T10:57:47.421439",
+  "prompt": "Simulate a low-pass filter with cutoff 1kHz using R=1.59kOhm and C=100nF and analyze the frequency response",
+  "code_generation": {
+    "response_length": 1802,
+    "has_pulse": false,
+    "has_wrong_pulse": false,
+    "has_analysis": true,
+    "has_circuit": true
+  },
+  "simulation": {
+    "success": true,
+    "error": null,
+    "error_type": null,
+    "data_points": 402,
+    "plots": 0
+  },
+  "data_storage": {
+    "raw_data": "C:\\Users\\augus\\.openclaw\\simulation_data\\llm-pspice\\data\\test_2_simulation_20260222_105747.json",
+    "csv_export": "C:\\Users\\augus\\.openclaw\\simulation_data\\llm-pspice\\exports\\test_2_export_20260222_105747.csv",
+    "location": "Outside workspace: ~/.openclaw/simulation_data/llm-pspice/"
+  }
+}
