@@ -149,8 +149,12 @@ st.set_page_config(
 # Initialize session state
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
+if 'chat_messages' not in st.session_state:
+    st.session_state.chat_messages = []  # For LLM API context (role, content)
 if 'circuit_code' not in st.session_state:
     st.session_state.circuit_code = None
+if 'last_simulated_code' not in st.session_state:
+    st.session_state.last_simulated_code = None  # Successfully simulated code (after fixes)
 if 'simulation_results' not in st.session_state:
     st.session_state.simulation_results = None
 if 'circuit_visualization' not in st.session_state:
@@ -174,15 +178,17 @@ if 'use_custom_model' not in st.session_state:
 # Track if user has explicitly selected a model (prevent auto-reset)
 if 'user_has_selected_model' not in st.session_state:
     st.session_state.user_has_selected_model = False
+# Track conversation for context
+MAX_CHAT_HISTORY = 10  # Keep last 10 turns to manage token usage
 
 st.title("⚡ LLM-Powered Circuit Simulator")
 st.markdown("Chat with an LLM to design and simulate electronic circuits")
 
-# Two-column layout
-col1, col2 = st.columns([1, 1.5])
+# Two-tab layout
+chat_tab, results_tab = st.tabs(["💬 Chat", "📊 Simulation Results"])
 
-# Left column: Chat interface
-with col1:
+# Chat interface tab
+with chat_tab:
     st.subheader("💬 Chat")
 
     # Chat history display
@@ -196,7 +202,7 @@ with col1:
     user_input = st.chat_input("Describe the circuit you want to build...")
 
     if user_input:
-        # Add user message to chat
+        # Add user message to chat (display only)
         st.session_state.chat_history.append(('user', user_input))
 
         # Get LLM response with progress indicator
@@ -237,12 +243,25 @@ with col1:
                         st.markdown("**Debug Info:**")
                         st.code(f"Provider: {provider}\nUse Cloud: {st.session_state.ollama_use_cloud}\nModel: {st.session_state.ollama_model}\nAPI Key: {'Set' if st.session_state.ollama_api_key else 'None'}")
                         st.session_state.chat_history.append(('assistant', f'❌ {str(e)}'))
+                        st.session_state.chat_messages.append(('assistant', f'❌ {str(e)}'))
                 else:
                     llm = LLMOrchestrator(
                         provider=provider_key,
                         api_key=current_api_key
                     )
-                response = llm.process_request(user_input)
+
+                # Build conversation context for LLM
+                chat_messages = []
+                if st.session_state.chat_messages:
+                    # Trim to last MAX_CHAT_HISTORY turns (excluding current request)
+                    chat_messages = st.session_state.chat_messages[-MAX_CHAT_HISTORY:]
+
+                # Add to context if there's a previously simulated circuit
+                circuit_context = None
+                if st.session_state.last_simulated_code:
+                    circuit_context = f"Current working circuit code (successfully simulated):\n```python\n{st.session_state.last_simulated_code}\n```\n\nFor modifications, update this code appropriately."
+
+                response = llm.process_request(user_input, chat_history=chat_messages, circuit_context=circuit_context)
 
                 # Log empty response
                 if not response or not response.strip():
@@ -411,6 +430,12 @@ with col1:
                                     st.code(f"Error type: {type(e).__name__}\n\n{str(e)}", language='text')
 
                     st.session_state.chat_history.append(('assistant', response))
+                    st.session_state.chat_messages.append(('user', user_input))
+                    st.session_state.chat_messages.append(('assistant', response))
+
+                    # Update last_simulated_code if simulation succeeded
+                    if results.get('data') and len(results['data']) > 0:
+                        st.session_state.last_simulated_code = results.get('filtered_code', circuit_code)
                 else:
                     # No code block - just write the response as-is
                     st.write(response)
@@ -425,8 +450,10 @@ with col1:
                     st.warning("⚠️ LLM response doesn't contain Python code block. This issue has been logged.")
 
                     st.session_state.chat_history.append(('assistant', response))
-# Right column: Simulation results
-with col2:
+                    st.session_state.chat_messages.append(('user', user_input))
+                    st.session_state.chat_messages.append(('assistant', response))
+# Simulation results tab
+with results_tab:
     st.subheader("📊 Simulation Results")
 
     if st.session_state.simulation_results:
@@ -457,7 +484,7 @@ with col2:
                 st.info(f"📁 Data automatically saved to: {saved_filepath}")
                 st.caption("Note: Simulation data is stored outside the workspace context.")
     else:
-        st.info("💡 Start chatting on the left to generate and simulate circuits!")
+        st.info("💡 Run a circuit simulation in the Chat tab to see results here!")
 
 # Sidebar: Controls and info
 with st.sidebar:

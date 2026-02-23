@@ -72,12 +72,14 @@ class LLMOrchestrator:
         except Exception as e:
             raise Exception(f"Failed to initialize {self.provider} client: {str(e)}")
     
-    def process_request(self, user_request):
+    def process_request(self, user_request, chat_history=None, circuit_context=None):
         """
         Process user request and generate circuit code
 
         Args:
             user_request (str): Natural language description of circuit
+            chat_history (list): List of (role, message) tuples for conversation context
+            circuit_context (str): Previous working circuit code for modifications
 
         Returns:
             str: LLM response with circuit code
@@ -87,20 +89,20 @@ class LLMOrchestrator:
         try:
             # Ollama Cloud uses native API
             if self.provider == "ollama" and self.use_cloud:
-                return self._ollama_cloud_request(user_request, system_prompt)
+                return self._ollama_cloud_request(user_request, system_prompt, chat_history, circuit_context)
             elif self.provider in ["openai", "deepseek", "ollama"]:
-                return self._openai_compatible_request(user_request, system_prompt)
+                return self._openai_compatible_request(user_request, system_prompt, chat_history, circuit_context)
             elif self.provider == "gemini":
-                return self._gemini_request(user_request, system_prompt)
+                return self._gemini_request(user_request, system_prompt, chat_history, circuit_context)
             elif self.provider == "claude":
-                return self._claude_request(user_request, system_prompt)
+                return self._claude_request(user_request, system_prompt, chat_history, circuit_context)
             else:
                 return self._generate_fallback_code(user_request)
         except Exception as e:
             # Use enhanced error handling
             return handle_llm_error(e, user_request, context=f"LLM request to {self.provider}")
     
-    def _openai_compatible_request(self, user_request, system_prompt):
+    def _openai_compatible_request(self, user_request, system_prompt, chat_history=None, circuit_context=None):
         """Request for OpenAI-compatible APIs (OpenAI, DeepSeek, Ollama)"""
         model_map = {
             "openai": "gpt-3.5-turbo",
@@ -110,13 +112,24 @@ class LLMOrchestrator:
 
         model = model_map.get(self.provider, "gpt-3.5-turbo")
 
+        # Build messages array with context
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # Add chat history if provided
+        if chat_history:
+            messages.extend([{"role": role, "content": msg} for role, msg in chat_history])
+
+        # Add circuit context as a system message if provided
+        if circuit_context:
+            messages.append({"role": "system", "content": circuit_context})
+
+        # Add current user request
+        messages.append({"role": "user", "content": user_request})
+
         try:
             response = self.client.chat.completions.create(
                 model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_request}
-                ],
+                messages=messages,
                 temperature=0.7,
                 max_tokens=1000
             )
@@ -151,7 +164,7 @@ class LLMOrchestrator:
 
             return f"❌ API Error: {error_msg}\n\n{self._generate_fallback_code(user_request)}"
 
-    def _ollama_cloud_request(self, user_request, system_prompt):
+    def _ollama_cloud_request(self, user_request, system_prompt, chat_history=None, circuit_context=None):
         """Request for Ollama Cloud using native API (not OpenAI-compatible)"""
         import requests
         import time
@@ -169,12 +182,23 @@ class LLMOrchestrator:
             "Content-Type": "application/json"
         }
 
+        # Build messages array with context
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # Add chat history if provided
+        if chat_history:
+            messages.extend([{"role": role, "content": msg} for role, msg in chat_history])
+
+        # Add circuit context as a system message if provided
+        if circuit_context:
+            messages.append({"role": "system", "content": circuit_context})
+
+        # Add current user request
+        messages.append({"role": "user", "content": user_request})
+
         payload = {
             "model": model_name,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_request}
-            ],
+            "messages": messages,
             "stream": False,
             "options": {
                 "num_predict": 1000,  # Limit tokens for faster response
@@ -305,42 +329,69 @@ class LLMOrchestrator:
             print(f"DEBUG: Fallback failed: {str(e)}")
             raise Exception(f"Generate endpoint failed: {str(e)}")
 
-    def _gemini_request(self, user_request, system_prompt):
+    def _gemini_request(self, user_request, system_prompt, chat_history=None, circuit_context=None):
         """Request for Google Gemini"""
         try:
             import google.generativeai as genai
-            
+
             genai.configure(api_key=self.api_key or os.getenv('GEMINI_API_KEY'))
             model = genai.GenerativeModel('gemini-pro')
-            
-            prompt = f"{system_prompt}\n\nUser: {user_request}"
+
+            # Build full prompt with context
+            prompt_parts = [system_prompt]
+
+            # Add chat history if provided
+            if chat_history:
+                for role, msg in chat_history:
+                    prompt_parts.append(f"\n{role.capitalize()}: {msg}")
+
+            # Add circuit context if provided
+            if circuit_context:
+                prompt_parts.append(f"\n{circuit_context}")
+
+            # Add current user request
+            prompt_parts.append(f"\nUser: {user_request}")
+
+            prompt = "\n".join(prompt_parts)
             response = model.generate_content(prompt)
-            
+
             return response.text
         except ImportError:
             return f"❌ Google Gemini library not installed. Run: pip install google-generativeai\n\n{self._generate_fallback_code(user_request)}"
         except Exception as e:
             return f"❌ Gemini error: {str(e)}\n\n{self._generate_fallback_code(user_request)}"
     
-    def _claude_request(self, user_request, system_prompt):
+    def _claude_request(self, user_request, system_prompt, chat_history=None, circuit_context=None):
         """Request for Anthropic Claude"""
         try:
             import anthropic
-            
+
             client = anthropic.Anthropic(
                 api_key=self.api_key or os.getenv('CLAUDE_API_KEY')
             )
-            
+
+            # Build messages array with context
+            messages = []
+
+            # Add chat history if provided
+            if chat_history:
+                messages.extend([{"role": role, "content": msg} for role, msg in chat_history])
+
+            # Add circuit context as a user message if provided
+            if circuit_context:
+                messages.append({"role": "user", "content": circuit_context})
+
+            # Add current user request
+            messages.append({"role": "user", "content": user_request})
+
             message = client.messages.create(
                 model="claude-3-sonnet-20240229",
                 max_tokens=1000,
                 temperature=0.7,
                 system=system_prompt,
-                messages=[
-                    {"role": "user", "content": user_request}
-                ]
+                messages=messages
             )
-            
+
             return message.content[0].text
         except ImportError:
             return f"❌ Anthropic library not installed. Run: pip install anthropic\n\n{self._generate_fallback_code(user_request)}"
