@@ -484,8 +484,7 @@ with editor_tab:
     editor_code = st_monaco(
         value=st.session_state.editor_code,
         language="python",
-        height="500px",
-        theme="vs-dark",
+        height=500,
         key="circuit_editor"
     )
 
