@@ -198,6 +198,148 @@ with chat_tab:
         else:
             st.chat_message("assistant").write(message)
 
+    # Show persistent "Run Simulation" button if circuit code exists
+    if st.session_state.circuit_code:
+        st.markdown("---")
+        if st.button("⚡ Run Simulation"):
+            st.info("⚙️ Validating circuit and running simulation...")
+
+            with st.spinner("🔍 Validating circuit code..."):
+                import time
+                time.sleep(0.5)  # Small delay to show validation message
+
+            with st.spinner("⚡ Running Ngspice simulation...\n(This may take 10-30 seconds depending on circuit complexity)"):
+                try:
+                    builder = CircuitBuilder()
+                    results = builder.run_simulation(st.session_state.circuit_code)
+                    st.session_state.simulation_results = results
+
+                    # Enhanced error handling
+                    if results.get('error'):
+                        # Use enhanced error handler for simulation errors
+                        from error_handler import ErrorCategory
+                        error_msg = results['error']
+
+                        # Log the simulation error
+                        if 'duplicate declaration' in error_msg.lower() or 'ngcomplex' in error_msg.lower():
+                            category = ErrorCategory.CIRCUIT_INVALID
+                            log_invalid_circuit(
+                                prompt="Run Simulation button click",
+                                error_message=error_msg,
+                                llm_model=st.session_state.ollama_model,
+                                provider=st.session_state.llm_provider
+                            )
+                            st.error(f"❌ Circuit Simulation Error\n\n{error_msg}")
+                            st.warning("💡 This is a PySpice initialization issue. Try refreshing the page.")
+                            st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
+                        elif 'convergence' in error_msg.lower() or 'singular' in error_msg.lower():
+                            category = ErrorCategory.SIMULATION_FAILED
+                            log_simulation_error(
+                                prompt="Run Simulation button click",
+                                error_message=error_msg,
+                                llm_model=st.session_state.ollama_model,
+                                provider=st.session_state.llm_provider
+                            )
+                            st.error(f"❌ Simulation Failed\n\n{error_msg}")
+                            st.info("💡 Try adjusting component values or simulation parameters.")
+                            st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
+                        else:
+                            log_simulation_error(
+                                prompt="Run Simulation button click",
+                                error_message=error_msg,
+                                llm_model=st.session_state.ollama_model,
+                                provider=st.session_state.llm_provider
+                            )
+                            st.error(f"❌ Simulation error: {error_msg}")
+                            st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
+
+                        # Always show technical details for debugging
+                        with st.expander("🔧 Technical Details"):
+                            st.code(f"Error type: {results.get('error_type', 'Unknown')}\n\n{error_msg}", language='text')
+
+                    elif not results.get('data') or len(results['data']) == 0:
+                        # Log empty data issue with debug information
+                        debug_info = results.get('debug_info', {})
+                        log_empty(
+                            prompt="Run Simulation button click",
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider,
+                            context="Simulation produced no data",
+                            debug_info=debug_info
+                        )
+                        st.warning("⚠️ Simulation ran but produced no data. This might be due to:")
+                        st.warning("- Missing 'analysis = simulator.transient(...)'")
+                        st.warning("- Incorrect node names or variables")
+                        st.warning("- Simulation parameters (step_time, end_time) may be too small")
+                        st.info("💡 Make sure your code defines: circuit + simulator + analysis")
+                        st.session_state.chat_history.append(('assistant', '⚠️ Simulation produced no data'))
+
+                    else:
+                        st.success(f"✅ Simulation completed! Found {len(results['data'])} data points.")
+
+                        # Show debug info if available and debug mode enabled
+                        if st.session_state.get('show_debug_info', False):
+                            with st.expander("🔍 Debug Information"):
+                                # Show debug info
+                                if results.get('debug_info'):
+                                    st.subheader("Analysis Object")
+                                    debug_info = results['debug_info']
+                                    st.json(debug_info)
+
+                                    if not debug_info.get('has_time'):
+                                        st.warning("⚠️ Analysis object missing 'time' attribute")
+                                    if not debug_info.get('has_nodes'):
+                                        st.warning("⚠️ Analysis object missing 'nodes' attribute")
+
+                                # Show filtered circuit code
+                                if results.get('filtered_code'):
+                                    st.subheader("Filtered Circuit Code (After LLM Fixes)")
+                                    with st.empty():
+                                        st.code(results['filtered_code'], language='python')
+
+                        # Automatically display circuit if visualization available
+                        if results.get('circuit'):
+                            st.session_state.circuit_visualization = results['circuit']
+                            st.session_state.last_simulated_code = results.get('filtered_code', st.session_state.circuit_code)
+
+                        # Add success message to chat
+                        st.session_state.chat_history.append(('assistant', f'✅ Simulation completed! Found {len(results["data"])} data points.'))
+
+                except Exception as e:
+                    # Use enhanced error handler for all exceptions
+                    from error_handler import handle_llm_error, ErrorCategory
+                    error_message = handle_llm_error(e, context="Circuit simulation")
+
+                    # Log the exception
+                    error_msg = str(e)
+                    if 'timeout' in error_msg.lower():
+                        log_timeout(
+                            prompt="Run Simulation button click",
+                            error_message=error_msg,
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider
+                        )
+                    elif 'SyntaxError' in str(type(e)) or 'syntax' in error_msg.lower():
+                        log_syntax_error(
+                            prompt="Run Simulation button click",
+                            error_message=error_msg,
+                            llm_response=st.session_state.circuit_code,
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider
+                        )
+                    else:
+                        log_simulation_error(
+                            prompt="Run Simulation button click",
+                            error_message=error_msg,
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider
+                        )
+                    st.error(f"❌ Error: {error_message}")
+                    st.session_state.chat_history.append(('assistant', f'❌ Error: {error_message}'))
+
+            # Rerun to show results
+            st.rerun()
+
     # User input
     user_input = st.chat_input("Describe the circuit you want to build...")
 
@@ -302,156 +444,21 @@ with chat_tab:
                         # Show generated code (only once, not duplicated)
                         st.code(circuit_code, language='python')
 
-                        # Run simulation with progress indicator
+                        # Add chat history always (before button)
+                        st.session_state.chat_history.append(('assistant', response))
+                        st.session_state.chat_messages.append(('user', user_input))
+                        st.session_state.chat_messages.append(('assistant', response))
+
+                        # Add Run Simulation button (replaced with persistent button)
+                        # The Run Simulation button is now shown persistently in the chat history section
+                        # when circuit_code exists in session_state
                         st.markdown("---")
-                        st.info("⚙️ Validating circuit and running simulation...")
+                        st.info("💡 Click the 'Run Simulation' button below to simulate this circuit!")
 
-                        with st.spinner("🔍 Validating circuit code..."):
-                            import time
-                            time.sleep(0.5)  # Small delay to show validation message
+                        # Rerun to show the persistent "Run Simulation" button
+                        st.rerun()
 
-                        with st.spinner("⚡ Running Ngspice simulation...\n(This may take 10-30 seconds depending on circuit complexity)"):
-                            try:
-                                builder = CircuitBuilder()
-                                results = builder.run_simulation(circuit_code)
-                                st.session_state.simulation_results = results
-
-                                # Enhanced error handling
-                                if results.get('error'):
-                                    # Use enhanced error handler for simulation errors
-                                    from error_handler import ErrorCategory
-                                    error_msg = results['error']
-
-                                    # Log the simulation error
-                                    if 'duplicate declaration' in error_msg.lower() or 'ngcomplex' in error_msg.lower():
-                                        category = ErrorCategory.CIRCUIT_INVALID
-                                        log_invalid_circuit(
-                                            prompt=user_input,
-                                            error_message=error_msg,
-                                            llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                                            provider=provider
-                                        )
-                                        st.error(f"❌ Circuit Simulation Error\n\n{error_msg}")
-                                        st.warning("💡 This is a PySpice initialization issue. Try refreshing the page.")
-                                    elif 'convergence' in error_msg.lower() or 'singular' in error_msg.lower():
-                                        category = ErrorCategory.SIMULATION_FAILED
-                                        log_simulation_error(
-                                            prompt=user_input,
-                                            error_message=error_msg,
-                                            llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                                            provider=provider
-                                        )
-                                        st.error(f"❌ Simulation Failed\n\n{error_msg}")
-                                        st.info("💡 Try adjusting component values or simulation parameters.")
-                                    else:
-                                        log_simulation_error(
-                                            prompt=user_input,
-                                            error_message=error_msg,
-                                            llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                                            provider=provider
-                                        )
-                                        st.error(f"❌ Simulation error: {error_msg}")
-
-                                    # Always show technical details for debugging
-                                    with st.expander("🔧 Technical Details"):
-                                        st.code(f"Error type: {results.get('error_type', 'Unknown')}\n\n{error_msg}", language='text')
-
-                                elif not results.get('data') or len(results['data']) == 0:
-                                    # Log empty data issue with debug information
-                                    debug_info = results.get('debug_info', {})
-                                    log_empty(
-                                        prompt=user_input,
-                                        llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                                        provider=provider,
-                                        context="Simulation produced no data",
-                                        debug_info=debug_info
-                                    )
-                                    st.warning("⚠️ Simulation ran but produced no data. This might be due to:")
-                                    st.warning("- Missing 'analysis = simulator.transient(...)'")
-                                    st.warning("- Incorrect node names or variables")
-                                    st.warning("- Simulation parameters (step_time, end_time) may be too small")
-                                    st.info("💡 Make sure your code defines: circuit + simulator + analysis")
-                                else:
-                                    st.success(f"✅ Simulation completed! Found {len(results['data'])} data points.")
-
-                                    # Show debug info if available and debug mode enabled
-                                    if st.session_state.get('show_debug_info', False):
-                                        with st.expander("🔍 Debug Information"):
-                                            # Show debug info
-                                            if results.get('debug_info'):
-                                                st.subheader("Analysis Object")
-                                                debug_info = results['debug_info']
-                                                st.json(debug_info)
-
-                                                if not debug_info.get('has_time'):
-                                                    st.warning("⚠️ Analysis object missing 'time' attribute")
-                                                if not debug_info.get('has_nodes'):
-                                                    st.warning("⚠️ Analysis object missing 'nodes' attribute")
-
-                                            # Show filtered circuit code
-                                            if results.get('filtered_code'):
-                                                st.subheader("Filtered Circuit Code (After LLM Fixes)")
-                                                with st.empty():
-                                                    st.code(results['filtered_code'], language='python')
-
-                            except Exception as e:
-                                # Use enhanced error handler for all exceptions
-                                from error_handler import handle_llm_error, ErrorCategory
-                                error_message = handle_llm_error(e, context="Circuit simulation")
-
-                                # Log the exception
-                                error_msg = str(e)
-                                if 'timeout' in error_msg.lower():
-                                    log_timeout(
-                                        prompt=user_input,
-                                        error_message=error_msg,
-                                        llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                                        provider=provider
-                                    )
-                                elif 'SyntaxError' in str(type(e)) or 'syntax' in error_msg.lower():
-                                    log_syntax_error(
-                                        prompt=user_input,
-                                        error_message=error_msg,
-                                        llm_response=response,
-                                        llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                                        provider=provider
-                                    )
-                                else:
-                                    log_simulation_error(
-                                        prompt=user_input,
-                                        error_message=error_msg,
-                                        llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                                        provider=provider
-                                    )
-
-                                st.error(error_message)
-
-                                with st.expander("🔧 Technical Details"):
-                                    st.code(f"Error type: {type(e).__name__}\n\n{str(e)}", language='text')
-
-                    st.session_state.chat_history.append(('assistant', response))
-                    st.session_state.chat_messages.append(('user', user_input))
-                    st.session_state.chat_messages.append(('assistant', response))
-
-                    # Update last_simulated_code if simulation succeeded
-                    if results.get('data') and len(results['data']) > 0:
-                        st.session_state.last_simulated_code = results.get('filtered_code', circuit_code)
-                else:
-                    # No code block - just write the response as-is
-                    st.write(response)
-
-                    # Log missing code block
-                    log_no_code_block(
-                        prompt=user_input,
-                        llm_response=response,
-                        llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
-                        provider=provider
-                    )
-                    st.warning("⚠️ LLM response doesn't contain Python code block. This issue has been logged.")
-
-                    st.session_state.chat_history.append(('assistant', response))
-                    st.session_state.chat_messages.append(('user', user_input))
-                    st.session_state.chat_messages.append(('assistant', response))
+# Simulation results tab))
 # Simulation results tab
 with results_tab:
     st.subheader("📊 Simulation Results")
@@ -677,10 +684,6 @@ with st.sidebar:
                         st.caption(f"Current model: {st.session_state.ollama_model}")
                 else:
                     st.caption(f"Keeping your selection: {st.session_state.ollama_model}")
-
-    st.subheader("Simulation Settings")
-    simulation_time = st.slider("Simulation Time (ms)", 1, 100, 10)
-    time_step = st.slider("Time Step (µs)", 0.1, 100.0, 1.0, step=0.1)
 
     st.markdown("---")
     st.markdown("### 📚 Example Queries")
