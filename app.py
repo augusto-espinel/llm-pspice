@@ -16,6 +16,7 @@ in ~/.openclaw/simulation_data/llm-pspice/ to prevent context overflow.
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+from streamlit_monaco import st_monaco
 from circuit_builder import CircuitBuilder
 from llm_orchestrator import LLMOrchestrator
 from app_logger import get_logger, log_empty, log_simulation_error, log_invalid_circuit, log_api_error, log_timeout, log_no_code_block, log_syntax_error, log_response_duplication
@@ -153,6 +154,8 @@ if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = []  # For LLM API context (role, content)
 if 'circuit_code' not in st.session_state:
     st.session_state.circuit_code = None
+if 'editor_code' not in st.session_state:
+    st.session_state.editor_code = ""  # Code in Monaco editor (source of truth for simulation)
 if 'last_simulated_code' not in st.session_state:
     st.session_state.last_simulated_code = None  # Successfully simulated code (after fixes)
 if 'simulation_results' not in st.session_state:
@@ -184,8 +187,8 @@ MAX_CHAT_HISTORY = 10  # Keep last 10 turns to manage token usage
 st.title("⚡ LLM-Powered Circuit Simulator")
 st.markdown("Chat with an LLM to design and simulate electronic circuits")
 
-# Two-tab layout
-chat_tab, results_tab = st.tabs(["💬 Chat", "📊 Simulation Results"])
+# Three-tab layout
+chat_tab, editor_tab, results_tab = st.tabs(["💬 Chat", "📝 Code Editor", "📊 Simulation Results"])
 
 # Chat interface tab
 with chat_tab:
@@ -198,10 +201,10 @@ with chat_tab:
         else:
             st.chat_message("assistant").write(message)
 
-    # Show persistent "Run Simulation" button if circuit code exists
-    if st.session_state.circuit_code:
+    # Show persistent "Run Simulation" button if editor code exists
+    if st.session_state.editor_code:
         st.markdown("---")
-        if st.button("⚡ Run Simulation"):
+        if st.button("⚡ Run Simulation", key="chat_run_simulation"):
             st.info("⚙️ Validating circuit and running simulation...")
 
             with st.spinner("🔍 Validating circuit code..."):
@@ -211,7 +214,8 @@ with chat_tab:
             with st.spinner("⚡ Running Ngspice simulation...\n(This may take 10-30 seconds depending on circuit complexity)"):
                 try:
                     builder = CircuitBuilder()
-                    results = builder.run_simulation(st.session_state.circuit_code)
+                    # Run simulation from editor code (source of truth)
+                    results = builder.run_simulation(st.session_state.editor_code)
                     st.session_state.simulation_results = results
 
                     # Enhanced error handling
@@ -440,6 +444,8 @@ with chat_tab:
                     if code_blocks:
                         circuit_code = code_blocks[0]
                         st.session_state.circuit_code = circuit_code
+                        # Also update editor code (source of truth for simulation)
+                        st.session_state.editor_code = circuit_code
 
                         # Show generated code (only once, not duplicated)
                         st.code(circuit_code, language='python')
@@ -458,7 +464,37 @@ with chat_tab:
                         # Rerun to show the persistent "Run Simulation" button
                         st.rerun()
 
-# Simulation results tab))
+# Code Editor tab
+with editor_tab:
+    st.subheader("📝 Code Editor")
+
+    st.info("💡 Edit the circuit code here and click 'Run Simulation' in the sidebar to execute.")
+
+    # Add Copy Code button
+    col_copy, col_info = st.columns([1, 3])
+    with col_copy:
+        if st.button("📋 Copy Code", help="Copy code to clipboard"):
+            if st.session_state.editor_code:
+                st.code(st.session_state.editor_code, language='python')
+                st.success("✅ Code displayed below! Copy it manually.")
+            else:
+                st.warning("⚠️ No code to copy.")
+
+    # Monaco editor
+    editor_code = st_monaco(
+        value=st.session_state.editor_code,
+        language="python",
+        height="500px",
+        theme="vs-dark",
+        key="circuit_editor"
+    )
+
+    # Update session state when editor changes
+    if editor_code != st.session_state.editor_code:
+        st.session_state.editor_code = editor_code
+        # Also update circuit_code to keep them in sync
+        st.session_state.circuit_code = editor_code
+
 # Simulation results tab
 with results_tab:
     st.subheader("📊 Simulation Results")
@@ -495,6 +531,131 @@ with results_tab:
 
 # Sidebar: Controls and info
 with st.sidebar:
+    st.header("🎮 Actions")
+
+    # Run Simulation button (always available if there's code in editor)
+    if st.session_state.editor_code:
+        if st.button(
+            "⚡ Run Simulation",
+            key="sidebar_run_simulation",
+            type="primary",
+            use_container_width=True,
+            help="Run the circuit code from the Code Editor"
+        ):
+            # Switch to chat tab to show simulation results
+            st.session_state.selected_tab = "Chat"
+            st.info("⚙️ Validating circuit and running simulation...")
+
+            with st.spinner("🔍 Validating circuit code..."):
+                import time
+                time.sleep(0.5)  # Small delay to show validation message
+
+            with st.spinner("⚡ Running Ngspice simulation...\n(This may take 10-30 seconds depending on circuit complexity)"):
+                try:
+                    builder = CircuitBuilder()
+                    # Run simulation from editor code (source of truth)
+                    results = builder.run_simulation(st.session_state.editor_code)
+                    st.session_state.simulation_results = results
+
+                    # Enhanced error handling
+                    if results.get('error'):
+                        error_msg = results['error']
+
+                        # Log the simulation error
+                        if 'duplicate declaration' in error_msg.lower() or 'ngcomplex' in error_msg.lower():
+                            from error_handler import ErrorCategory
+                            log_invalid_circuit(
+                                prompt="Sidebar Run Simulation button",
+                                error_message=error_msg,
+                                llm_model=st.session_state.ollama_model,
+                                provider=st.session_state.llm_provider
+                            )
+                            st.error(f"❌ Circuit Simulation Error\n\n{error_msg}")
+                            st.warning("💡 This is a PySpice initialization issue. Try refreshing the page.")
+                            st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
+                        elif 'convergence' in error_msg.lower() or 'singular' in error_msg.lower():
+                            from error_handler import ErrorCategory
+                            log_simulation_error(
+                                prompt="Sidebar Run Simulation button",
+                                error_message=error_msg,
+                                llm_model=st.session_state.ollama_model,
+                                provider=st.session_state.llm_provider
+                            )
+                            st.error(f"❌ Simulation Failed\n\n{error_msg}")
+                            st.info("💡 Try adjusting component values or simulation parameters.")
+                            st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
+                        else:
+                            from error_handler import ErrorCategory
+                            log_simulation_error(
+                                prompt="Sidebar Run Simulation button",
+                                error_message=error_msg,
+                                llm_model=st.session_state.ollama_model,
+                                provider=st.session_state.llm_provider
+                            )
+                            st.error(f"❌ Simulation error: {error_msg}")
+                            st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
+
+                    elif not results.get('data') or len(results['data']) == 0:
+                        debug_info = results.get('debug_info', {})
+                        log_empty(
+                            prompt="Sidebar Run Simulation button",
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider,
+                            context="Simulation produced no data",
+                            debug_info=debug_info
+                        )
+                        st.warning("⚠️ Simulation ran but produced no data.")
+                        st.info("💡 Make sure your code defines: circuit + simulator + analysis")
+                        st.session_state.chat_history.append(('assistant', '⚠️ Simulation produced no data'))
+                    else:
+                        st.success(f"✅ Simulation completed! Found {len(results['data'])} data points.")
+
+                        # Automatically display circuit if visualization available
+                        if results.get('circuit'):
+                            st.session_state.circuit_visualization = results['circuit']
+                            st.session_state.last_simulated_code = results.get('filtered_code', st.session_state.editor_code)
+
+                        # Add success message to chat
+                        st.session_state.chat_history.append(('assistant', f'✅ Simulation completed! Found {len(results["data"])} data points.'))
+
+                except Exception as e:
+                    from error_handler import handle_llm_error, ErrorCategory
+                    error_message = handle_llm_error(e, context="Circuit simulation")
+
+                    # Log the exception
+                    error_msg = str(e)
+                    if 'timeout' in error_msg.lower():
+                        log_timeout(
+                            prompt="Sidebar Run Simulation button",
+                            error_message=error_msg,
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider
+                        )
+                    elif 'SyntaxError' in str(type(e)) or 'syntax' in error_msg.lower():
+                        log_syntax_error(
+                            prompt="Sidebar Run Simulation button",
+                            error_message=error_msg,
+                            llm_response=st.session_state.editor_code,
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider
+                        )
+                    else:
+                        log_simulation_error(
+                            prompt="Sidebar Run Simulation button",
+                            error_message=error_msg,
+                            llm_model=st.session_state.ollama_model,
+                            provider=st.session_state.llm_provider
+                        )
+                    st.error(f"❌ Error: {error_message}")
+                    st.session_state.chat_history.append(('assistant', f'❌ Error: {error_message}'))
+
+            # Rerun to show results
+            st.rerun()
+    else:
+        st.caption("💡 Generate code in Chat tab to enable simulation")
+
+    st.markdown("---")
+
     st.header("⚙️ Settings")
 
     st.subheader("LLM Configuration")
