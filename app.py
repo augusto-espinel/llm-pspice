@@ -468,6 +468,15 @@ with chat_tab:
 with editor_tab:
     st.subheader("📝 Code Editor")
 
+    # Debug: Show if editor_code exists
+    debug_mode = st.checkbox("🔍 Debug Mode", value=False)
+
+    if debug_mode:
+        if st.session_state.editor_code:
+            st.success(f"✅ editor_code exists ({len(st.session_state.editor_code)} chars)")
+        else:
+            st.warning("⚠️ editor_code is empty")
+
     st.info("💡 Edit the circuit code here and click 'Run Simulation' in the sidebar to execute.")
 
     # Add Copy Code button
@@ -493,6 +502,14 @@ with editor_tab:
         st.session_state.editor_code = editor_code
         # Also update circuit_code to keep them in sync
         st.session_state.circuit_code = editor_code
+
+    # Show current code state below editor (for verification)
+    if debug_mode:
+        st.markdown("### 🔍 Current `editor_code` content:")
+        if st.session_state.editor_code:
+            st.code(st.session_state.editor_code, language='python')
+        else:
+            st.code("(empty)", language='text')
 
 # Simulation results tab
 with results_tab:
