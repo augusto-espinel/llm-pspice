@@ -170,6 +170,8 @@ if 'ollama_model' not in st.session_state:
     st.session_state.ollama_model = "deepseek-r1:8b"
 if 'ollama_api_key' not in st.session_state:
     st.session_state.ollama_api_key = None
+if 'openrouter_model' not in st.session_state:
+    st.session_state.openrouter_model = "openai/gpt-3.5-turbo"
 if 'ollama_use_cloud' not in st.session_state:
     st.session_state.ollama_use_cloud = False
 if 'cloud_models' not in st.session_state:
@@ -391,9 +393,12 @@ with chat_tab:
                         st.session_state.chat_history.append(('assistant', f'❌ {str(e)}'))
                         st.session_state.chat_messages.append(('assistant', f'❌ {str(e)}'))
                 else:
+                    # For OpenRouter, pass the model name
+                    model_name = st.session_state.openrouter_model if provider == "OpenRouter" else None
                     llm = LLMOrchestrator(
                         provider=provider_key,
-                        api_key=current_api_key
+                        api_key=current_api_key,
+                        model_name=model_name
                     )
 
                 # Build conversation context for LLM
@@ -709,8 +714,8 @@ with st.sidebar:
     st.subheader("LLM Configuration")
     provider = st.selectbox(
         "LLM Provider",
-        ["OpenAI", "Gemini", "Claude", "DeepSeek", "Ollama"],
-        index=["OpenAI", "Gemini", "Claude", "DeepSeek", "Ollama"].index(st.session_state.llm_provider),
+        ["OpenAI", "Gemini", "Claude", "DeepSeek", "OpenRouter", "Ollama"],
+        index=["OpenAI", "Gemini", "Claude", "DeepSeek", "OpenRouter", "Ollama"].index(st.session_state.llm_provider),
         help="Select your LLM provider"
     )
     st.session_state.llm_provider = provider
@@ -732,6 +737,30 @@ with st.sidebar:
             st.session_state.api_key = api_key
             if api_key:  # Only save if not empty
                 save_api_key(provider, api_key)
+        
+        # Model selection for OpenRouter (supports many models)
+        if provider == "OpenRouter":
+            st.subheader("🔀 Model Selection")
+            model_help = """
+OpenRouter supports hundreds of models. Examples:
+- **OpenAI:** openai/gpt-4, openai/gpt-3.5-turbo
+- **Anthropic:** anthropic/claude-3.5-sonnet, anthropic/claude-3-opus
+- **Google:** google/gemini-2.0-flash-exp, google/gemini-pro
+- **Meta:** meta-llama/llama-2-70b-chat, meta-llama/llama-3-70b-instruct
+- **DeepSeek:** deepseek/deepseek-r1
+- **xAI:** xai/grok-2
+
+See https://openrouter.ai/docs#models for full list.
+            """
+            
+            model_name = st.text_input(
+                "Model Name (provider/model-name format)",
+                value=st.session_state.openrouter_model,
+                help=model_help,
+                placeholder="openai/gpt-3.5-turbo"
+            )
+            if model_name != st.session_state.openrouter_model:
+                st.session_state.openrouter_model = model_name
     else:
         st.session_state.api_key = None
 

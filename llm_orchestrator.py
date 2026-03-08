@@ -1,6 +1,6 @@
 """
 LLM Orchestrator - Multi-Provider Support
-Supports: OpenAI, Google Gemini, Anthropic Claude, DeepSeek, Ollama
+Supports: OpenAI, Google Gemini, Anthropic Claude, DeepSeek, Ollama, OpenRouter
 """
 
 import os
@@ -39,6 +39,11 @@ class LLMOrchestrator:
                 self.client = OpenAI(
                     base_url="https://api.deepseek.com",
                     api_key=self.api_key or os.getenv('DEEPSEEK_API_KEY')
+                )
+            elif self.provider == "openrouter":
+                self.client = OpenAI(
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=self.api_key or os.getenv('OPENROUTER_API_KEY')
                 )
             elif self.provider == "ollama":
                 if self.use_cloud:
@@ -90,7 +95,7 @@ class LLMOrchestrator:
             # Ollama Cloud uses native API
             if self.provider == "ollama" and self.use_cloud:
                 return self._ollama_cloud_request(user_request, system_prompt, chat_history, circuit_context)
-            elif self.provider in ["openai", "deepseek", "ollama"]:
+            elif self.provider in ["openai", "deepseek", "openrouter", "ollama"]:
                 return self._openai_compatible_request(user_request, system_prompt, chat_history, circuit_context)
             elif self.provider == "gemini":
                 return self._gemini_request(user_request, system_prompt, chat_history, circuit_context)
@@ -103,10 +108,11 @@ class LLMOrchestrator:
             return handle_llm_error(e, user_request, context=f"LLM request to {self.provider}")
     
     def _openai_compatible_request(self, user_request, system_prompt, chat_history=None, circuit_context=None):
-        """Request for OpenAI-compatible APIs (OpenAI, DeepSeek, Ollama)"""
+        """Request for OpenAI-compatible APIs (OpenAI, DeepSeek, Ollama, OpenRouter)"""
         model_map = {
             "openai": "gpt-3.5-turbo",
             "deepseek": "deepseek-chat",
+            "openrouter": self.model_name if self.model_name else "openai/gpt-3.5-turbo",  # OpenRouter uses provider/model format
             "ollama": self.model_name if self.model_name else "llama3"  # Use specified or default model
         }
 
