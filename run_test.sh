@@ -1,0 +1,1 @@
+conda run -n pyspice python "C:\Users\augus\.openclaw\workspace\llm-sim-poc\test_filter_direct.py" 2>&1 | findstr /C:"✓" /C:"✗" /C:"Sample"

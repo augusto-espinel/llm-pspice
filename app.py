@@ -163,7 +163,7 @@ if 'simulation_results' not in st.session_state:
 if 'circuit_visualization' not in st.session_state:
     st.session_state.circuit_visualization = None
 if 'llm_provider' not in st.session_state:
-    st.session_state.llm_provider = "OpenAI"
+    st.session_state.llm_provider = "Ollama"
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
 if 'ollama_model' not in st.session_state:
@@ -477,6 +477,25 @@ with editor_tab:
         else:
             st.warning("⚠️ editor_code is empty")
 
+        # Add test button to manually set code
+        test_code = """from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('Test')
+circuit.R(1, 'in', 'out', 1 @ u_kOhm)
+circuit.C(1, 'out', circuit.gnd, 1 @ u_nF)
+simulator = circuit.simulator()
+analysis = simulator.transient(step_time=1 @ u_ms, end_time=10 @ u_ms)
+"""
+        col_test1, col_test2 = st.columns(2)
+        with col_test1:
+            if st.button("🧪 Set Test Code"):
+                st.session_state.editor_code = test_code
+                st.success("✅ Set test code in session state")
+        with col_test2:
+            if st.button("🔄 Rerun Now"):
+                st.rerun()
+
     st.info("💡 Edit the circuit code here and click 'Run Simulation' in the sidebar to execute.")
 
     # Add Copy Code button
@@ -490,6 +509,8 @@ with editor_tab:
                 st.warning("⚠️ No code to copy.")
 
     # Monaco editor
+    # NOTE: We read the value but DON'T auto-update session state to avoid overwriting
+    # The Run Simulation button will read from the editor on demand
     editor_code = st_monaco(
         value=st.session_state.editor_code,
         language="python",
@@ -497,11 +518,22 @@ with editor_tab:
         lineNumbers=True
     )
 
-    # Update session state when editor changes
-    if editor_code != st.session_state.editor_code:
-        st.session_state.editor_code = editor_code
-        # Also update circuit_code to keep them in sync
-        st.session_state.circuit_code = editor_code
+    # Debug/Automation controls (now AFTER editor is initialized, so editor_code is available)
+    if debug_mode:
+        st.markdown("### 🎮 Debug Controls")
+
+        # Sync button: Save Monaco editor content to session state
+        if st.button("💾 Sync Editor to Session"):
+            if editor_code and editor_code.strip():
+                st.session_state.editor_code = editor_code
+                st.session_state.circuit_code = editor_code
+                st.success(f"✅ Saved {len(editor_code)} chars to session state")
+            else:
+                st.warning("⚠️ Editor is empty")
+
+    # Only update session state from editor when explicitly requested
+    # (e.g., when "Sync to Session" button is clicked or Run Simulation runs)
+    # This prevents the editor from clearing session state on render
 
     # Show current code state below editor (for verification)
     if debug_mode:

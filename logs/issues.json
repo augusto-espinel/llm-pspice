@@ -381,7 +381,8 @@
       "llm_model": "glm-4.7",
       "provider": "Ollama",
       "context": "Empty response received from LLM"
-    }
+    },
+    "id": 33
   },
   {
     "timestamp": "2026-02-18T00:29:40.497936",
@@ -392,7 +393,8 @@
       "llm_response": "",
       "llm_model": "glm-4.7",
       "provider": "Ollama"
-    }
+    },
+    "id": 34
   },
   {
     "timestamp": "2026-02-18T00:30:21.431345",
@@ -403,7 +405,8 @@
       "llm_model": "glm-4.7",
       "provider": "Ollama",
       "context": "Simulation produced no data"
-    }
+    },
+    "id": 35
   },
   {
     "timestamp": "2026-02-18T00:38:28.039673",
@@ -414,7 +417,8 @@
       "llm_model": "glm-4.7",
       "provider": "Ollama",
       "context": "Simulation produced no data"
-    }
+    },
+    "id": 36
   },
   {
     "timestamp": "2026-02-18T20:09:47.738595",
@@ -425,7 +429,8 @@
       "llm_model": "cogito-2.1:671b",
       "provider": "Ollama",
       "context": "Simulation produced no data"
-    }
+    },
+    "id": 37
   },
   {
     "timestamp": "2026-02-18T20:11:53.278213",
@@ -435,7 +440,8 @@
     "metadata": {
       "llm_model": "glm-4.7",
       "provider": "Ollama"
-    }
+    },
+    "id": 38
   },
   {
     "timestamp": "2026-02-18T20:20:12.020266",
@@ -446,7 +452,8 @@
       "llm_model": "cogito-2.1:671b",
       "provider": "Ollama",
       "context": "Simulation produced no data"
-    }
+    },
+    "id": 39
   },
   {
     "timestamp": "2026-02-18T20:22:50.700868",
@@ -456,7 +463,8 @@
     "metadata": {
       "llm_model": "glm-4.7",
       "provider": "Ollama"
-    }
+    },
+    "id": 40
   },
   {
     "timestamp": "2026-02-18T20:35:07.560812",
@@ -467,7 +475,8 @@
       "llm_model": "glm-4.7",
       "provider": "Ollama",
       "context": "Simulation produced no data"
-    }
+    },
+    "id": 41
   },
   {
     "id": 32,
@@ -491,7 +500,8 @@
     "metadata": {
       "llm_model": "glm-4.7",
       "provider": "Ollama"
-    }
+    },
+    "id": 42
   },
   {
     "timestamp": "2026-02-18T20:40:37.852285",
@@ -502,7 +512,8 @@
       "llm_model": "cogito-2.1:671b",
       "provider": "Ollama",
       "context": "Simulation produced no data"
-    }
+    },
+    "id": 43
   },
   {
     "timestamp": "2026-02-19T22:22:18.582150",
@@ -513,7 +524,8 @@
       "llm_model": "cogito-2.1:671b",
       "provider": "Ollama",
       "context": "Simulation produced no data"
-    }
+    },
+    "id": 44
   },
   {
     "timestamp": "2026-02-22T11:47:39.556291",
@@ -524,6 +536,555 @@
       "llm_model": "cogito-2.1:671b",
       "provider": "Ollama",
       "context": "Simulation produced no data"
+    },
+    "id": 45
+  },
+  {
+    "timestamp": "2026-02-23T01:10:51.593744",
+    "prompt": "simulation time is too short",
+    "issue_type": "simulation_error",
+    "error_message": "âŒ Circuit validation failed:\n\nMissing simulation method (.transient() or .ac())",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 46,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734637"
     }
+  },
+  {
+    "timestamp": "2026-02-23T01:20:51.047453",
+    "prompt": "simulate an array of 4 li-ion cells in series with different states of health, being subject to a discharge profile",
+    "issue_type": "simulation_error",
+    "error_message": "CircuitSimulation.transient() got an unexpected keyword argument 'uic'",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 47,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "LLM hallucinating PySpice API arguments - requires enhanced system prompt",
+      "timestamp": "2026-02-25T08:32:28.734668"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T01:57:52.749360",
+    "prompt": "Build an LED driver circuit with 5V input",
+    "issue_type": "simulation_error",
+    "error_message": "Command 'run' failed",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 48,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734676"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T01:58:48.501549",
+    "prompt": "Error type: NgSpiceCommandError\n\nCommand 'run' failed",
+    "issue_type": "simulation_error",
+    "error_message": "CircuitSimulation.transient() got an unexpected keyword argument 'uic'",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 49,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "LLM hallucinating PySpice API arguments - requires enhanced system prompt",
+      "timestamp": "2026-02-25T08:32:28.734680"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T09:00:10.314841",
+    "prompt": "design a 4 quadrant line inverter for railway applications using ideal transistors and diodes",
+    "issue_type": "simulation_error",
+    "error_message": "âŒ Circuit validation failed:\n\nMissing simulation method (.transient() or .ac())",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 50,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734685"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T09:20:17.415748",
+    "prompt": "simulate a 4 quadrant active rectifier for railway applications, with 900 kW output power and a 3kV DC link",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "glm-4.7",
+      "provider": "Ollama",
+      "context": "Empty response received from LLM"
+    },
+    "id": 51,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734689"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T09:20:17.431829",
+    "prompt": "simulate a 4 quadrant active rectifier for railway applications, with 900 kW output power and a 3kV DC link",
+    "issue_type": "no_code_block",
+    "error_message": "",
+    "metadata": {
+      "llm_response": "",
+      "llm_model": "glm-4.7",
+      "provider": "Ollama"
+    },
+    "id": 52,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734692"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T09:22:07.181954",
+    "prompt": "simulate a 4 quadrant active rectifier for railway applications, with 900 kW output power and a 3kV DC link",
+    "issue_type": "simulation_error",
+    "error_message": "invalid decimal literal (<string>, line 61)",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 53,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734703"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T09:23:13.877154",
+    "prompt": "❌ Simulation error: invalid decimal literal (<string>, line 61)",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_mH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 54,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-23T09:23:55.226676",
+    "prompt": "❌ Simulation error: name 'u_mH' is not defined",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_mH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 55,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-23T09:25:09.920696",
+    "prompt": "Simulation error: name 'u_mH' is not defined",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_mH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 56,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-23T10:55:20.753875",
+    "prompt": "simulate a 4 quadrant active rectifier for railway applications, with 900 kW output power and a 3kV DC link",
+    "issue_type": "simulation_error",
+    "error_message": "SinusoidalMixin.__init__() got an unexpected keyword argument 'phase'",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 57,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "LLM hallucinating PySpice API arguments - requires enhanced system prompt",
+      "timestamp": "2026-02-25T08:32:28.734718"
+    }
+  },
+  {
+    "timestamp": "2026-02-23T10:56:00.297142",
+    "prompt": " Simulation error: SinusoidalMixin.init() got an unexpected keyword argument 'phase'",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_deg' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 58,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-23T11:01:08.174979",
+    "prompt": "❌ Simulation error: name 'u_deg' is not defined",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_deg' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 59,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-24T19:10:00.078662",
+    "prompt": "simulate a 3 quadrant, 3 level active rectifier with input voltage of 1850V at 50Hz, output DC voltage of 3000V and output power of 900kW",
+    "issue_type": "simulation_error",
+    "error_message": "VCSW",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 60,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734729"
+    }
+  },
+  {
+    "timestamp": "2026-02-24T19:11:19.523627",
+    "prompt": "there was an error",
+    "issue_type": "simulation_error",
+    "error_message": "CircuitSimulation.transient() got an unexpected keyword argument 'uic'",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 61,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734732"
+    }
+  },
+  {
+    "timestamp": "2026-02-24T19:13:23.988437",
+    "prompt": "❌ Simulation error: CircuitSimulation.transient() got an unexpected keyword argument 'uic'",
+    "issue_type": "simulation_error",
+    "error_message": "CircuitSimulation.transient() got an unexpected keyword argument 'initial_condition'",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 62,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "LLM hallucinating PySpice API arguments - requires enhanced system prompt",
+      "timestamp": "2026-02-25T08:32:28.734736"
+    }
+  },
+  {
+    "timestamp": "2026-02-24T19:20:39.156960",
+    "prompt": "❌ Simulation error: CircuitSimulation.transient() got an unexpected keyword argument 'initial_condition'",
+    "issue_type": "simulation_error",
+    "error_message": "Unknown argument initial_voltage=0 V",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 63,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "LLM hallucinating PySpice API arguments - requires enhanced system prompt",
+      "timestamp": "2026-02-25T08:32:28.734740"
+    }
+  },
+  {
+    "timestamp": "2026-02-24T19:23:05.225110",
+    "prompt": "❌ Simulation error: Unknown argument initial_voltage=0 V",
+    "issue_type": "simulation_error",
+    "error_message": "Command 'run' failed",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 64,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "Other issue type - requires analysis",
+      "timestamp": "2026-02-25T08:32:28.734743"
+    }
+  },
+  {
+    "timestamp": "2026-02-25T00:22:34.511013",
+    "prompt": "simulate the discharge of a li-ion battery",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_hour' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 65,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-25T00:43:00.760863",
+    "prompt": "simulate a step-down dc-dc converter",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_uH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 66,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-25T00:43:42.327238",
+    "prompt": "❌ Simulation error: name 'u_uH' is not defined",
+    "issue_type": "simulation_error",
+    "error_message": "Unknown argument Ron=0.1 Ω",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 67,
+    "status": "review_needed",
+    "fix_attempt": {
+      "strategy": "system_prompt_improvement",
+      "note": "LLM hallucinating PySpice API arguments - requires enhanced system prompt",
+      "timestamp": "2026-02-25T08:32:28.734754"
+    }
+  },
+  {
+    "timestamp": "2026-02-25T00:44:26.883343",
+    "prompt": "❌ Simulation error: Unknown argument Ron=0.1 Ω",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_uH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 68,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-25T00:45:15.861603",
+    "prompt": "❌ Simulation error: name 'u_uH' is not defined",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_uH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    },
+    "id": 69,
+    "status": "open",
+    "resolution": "Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes)",
+    "resolution_note": "Previously incorrectly resolved: Applied fix: unit_validator expanded (added u_uH, u_hour, u_mH, u_deg fixes) | ISSUE: u_uH, u_mH EXIST in PySpice! The real fix was to add them to namespace, not replace them.",
+    "real_fix": "Added u_mH, u_uH, u_μH to circuit_builder.py namespace (2026-02-25)"
+  },
+  {
+    "timestamp": "2026-02-25T23:20:05.718767",
+    "prompt": "Simulate a DC DC step down converter ",
+    "issue_type": "simulation_error",
+    "error_message": "Number of args mismatch",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "id": 62,
+    "timestamp": "2026-03-01T23:27:13.847494",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz",
+    "issue_type": "api_error",
+    "error_message": "HTTPSConnectionPool(host='api.ollama.com', port=443): Max retries exceeded with url: /api/chat (Caused by NameResolutionError(\"HTTPSConnection(host='api.ollama.com', port=443): Failed to resolve 'api.ollama.com' ([Errno 11001] getaddrinfo failed)\"))",
+    "llm_response": "",
+    "llm_model": "cogito-2.1:671b",
+    "provider": "ollama (cloud)",
+    "context": "",
+    "status": "open",
+    "attempts": 0,
+    "fix_attempt": null
+  },
+  {
+    "id": 63,
+    "timestamp": "2026-03-01T23:27:18.855968",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz",
+    "issue_type": "api_error",
+    "error_message": "HTTPSConnectionPool(host='api.ollama.com', port=443): Max retries exceeded with url: /api/chat (Caused by NameResolutionError(\"HTTPSConnection(host='api.ollama.com', port=443): Failed to resolve 'api.ollama.com' ([Errno 11001] getaddrinfo failed)\"))",
+    "llm_response": "",
+    "llm_model": "cogito-2.1:671b",
+    "provider": "ollama (cloud)",
+    "context": "",
+    "status": "open",
+    "attempts": 0,
+    "fix_attempt": null
+  },
+  {
+    "id": 64,
+    "timestamp": "2026-03-01T23:27:28.864548",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz",
+    "issue_type": "api_error",
+    "error_message": "HTTPSConnectionPool(host='api.ollama.com', port=443): Max retries exceeded with url: /api/chat (Caused by NameResolutionError(\"HTTPSConnection(host='api.ollama.com', port=443): Failed to resolve 'api.ollama.com' ([Errno 11001] getaddrinfo failed)\"))",
+    "llm_response": "",
+    "llm_model": "cogito-2.1:671b",
+    "provider": "ollama (cloud)",
+    "context": "",
+    "status": "open",
+    "attempts": 0,
+    "fix_attempt": null
+  },
+  {
+    "timestamp": "2026-03-01T23:29:43.887102",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "'int' object is not callable",
+    "metadata": {
+      "llm_model": "erwan2/DeepSeek-R1-Distill-Qwen-7B:latest",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T09:25:39.670680",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_mH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T09:26:30.201514",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_mH' is not defined",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T09:27:40.347700",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "Command 'run' failed",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T09:27:58.542040",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "Command 'run' failed",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T09:28:22.090761",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "E",
+    "metadata": {
+      "llm_model": "cogito-2.1:671b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:58:46.623017",
+    "prompt": "Sidebar Run Simulation button",
+    "issue_type": "simulation_error",
+    "error_message": "Command 'run' failed",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-04T00:00:28.998095",
+    "prompt": "Sidebar Run Simulation button",
+    "issue_type": "simulation_error",
+    "error_message": "Command 'run' failed",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-04T00:00:40.451457",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "Command 'run' failed",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "id": 74,
+    "timestamp": "2026-03-04T00:02:34.280246",
+    "prompt": "Simulate a low-pass filter with cutoff 1kHz",
+    "issue_type": "api_error",
+    "error_message": "Request timed out.",
+    "llm_response": "",
+    "llm_model": "deepseek-r1:8b",
+    "provider": "ollama",
+    "context": "",
+    "status": "open",
+    "attempts": 0,
+    "fix_attempt": null
   }
 ]
