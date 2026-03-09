@@ -213,7 +213,7 @@ with chat_tab:
                 import time
                 time.sleep(0.5)  # Small delay to show validation message
 
-            with st.spinner("⚡ Running Ngspice simulation...\n(This may take 10-30 seconds depending on circuit complexity)"):
+            with st.spinner("⚡ Running Ngspice simulation...\\n(This may take 10-30 seconds depending on circuit complexity)"):
                 try:
                     builder = CircuitBuilder()
                     # Run simulation from editor code (source of truth)
@@ -235,7 +235,7 @@ with chat_tab:
                                 llm_model=st.session_state.ollama_model,
                                 provider=st.session_state.llm_provider
                             )
-                            st.error(f"❌ Circuit Simulation Error\n\n{error_msg}")
+                            st.error(f"❌ Circuit Simulation Error\\n\\n{error_msg}")
                             st.warning("💡 This is a PySpice initialization issue. Try refreshing the page.")
                             st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
                         elif 'convergence' in error_msg.lower() or 'singular' in error_msg.lower():
@@ -246,7 +246,7 @@ with chat_tab:
                                 llm_model=st.session_state.ollama_model,
                                 provider=st.session_state.llm_provider
                             )
-                            st.error(f"❌ Simulation Failed\n\n{error_msg}")
+                            st.error(f"❌ Simulation Failed\\n\\n{error_msg}")
                             st.info("💡 Try adjusting component values or simulation parameters.")
                             st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
                         else:
@@ -261,7 +261,7 @@ with chat_tab:
 
                         # Always show technical details for debugging
                         with st.expander("🔧 Technical Details"):
-                            st.code(f"Error type: {results.get('error_type', 'Unknown')}\n\n{error_msg}", language='text')
+                            st.code(f"Error type: {results.get('error_type', 'Unknown')}\\n\\n{error_msg}", language='text')
 
                     elif not results.get('data') or len(results['data']) == 0:
                         # Log empty data issue with debug information
@@ -358,7 +358,7 @@ with chat_tab:
             # Determine spinner text based on provider
             provider = st.session_state.llm_provider
             if provider == "Ollama" and st.session_state.ollama_use_cloud:
-                spinner_text = f"🔄 Calling Ollama Cloud model: {st.session_state.ollama_model}...\n(This may take 30-90 seconds)"
+                spinner_text = f"🔄 Calling Ollama Cloud model: {st.session_state.ollama_model}...\\n(This may take 30-90 seconds)"
                 info_text = f"ℹ️ Using cloud model: **{st.session_state.ollama_model}**"
             elif provider == "Ollama":
                 spinner_text = f"🔄 Using local Ollama model: {st.session_state.ollama_model}..."
@@ -389,7 +389,7 @@ with chat_tab:
                     except Exception as e:
                         st.error(f"Error initializing LLM: {str(e)}")
                         st.markdown("**Debug Info:**")
-                        st.code(f"Provider: {provider}\nUse Cloud: {st.session_state.ollama_use_cloud}\nModel: {st.session_state.ollama_model}\nAPI Key: {'Set' if st.session_state.ollama_api_key else 'None'}")
+                        st.code(f"Provider: {provider}\\nUse Cloud: {st.session_state.ollama_use_cloud}\\nModel: {st.session_state.ollama_model}\\nAPI Key: {'Set' if st.session_state.ollama_api_key else 'None'}")
                         st.session_state.chat_history.append(('assistant', f'❌ {str(e)}'))
                         st.session_state.chat_messages.append(('assistant', f'❌ {str(e)}'))
                 else:
@@ -410,7 +410,7 @@ with chat_tab:
                 # Add to context if there's a previously simulated circuit
                 circuit_context = None
                 if st.session_state.last_simulated_code:
-                    circuit_context = f"Current working circuit code (successfully simulated):\n```python\n{st.session_state.last_simulated_code}\n```\n\nFor modifications, update this code appropriately."
+                    circuit_context = f"Current working circuit code (successfully simulated):\\n```python\\n{st.session_state.last_simulated_code}\\n```\\n\\nFor modifications, update this code appropriately."
 
                 response = llm.process_request(user_input, chat_history=chat_messages, circuit_context=circuit_context)
 
@@ -443,7 +443,7 @@ with chat_tab:
 
                     # Write only the non-code text (no markdown code block)
                     if non_code_parts:
-                        st.write('\n'.join(non_code_parts))
+                        st.write('\\n'.join(non_code_parts))
 
                     # Store code for simulation (use first code block only)
                     if code_blocks:
@@ -513,15 +513,39 @@ analysis = simulator.transient(step_time=1 @ u_ms, end_time=10 @ u_ms)
             else:
                 st.warning("⚠️ No code to copy.")
 
-    # Monaco editor
-    # NOTE: We read the value but DON'T auto-update session state to avoid overwriting
-    # The Run Simulation button will read from the editor on demand
-    editor_code = st_monaco(
-        value=st.session_state.editor_code,
-        language="python",
-        height="500px",
-        lineNumbers=True
-    )
+    # Monaco editor wrapped in a form to decouple editing from running
+    # This prevents lag while typing and ensures the typed value is captured on submit
+    with st.form(key="editor_form"):
+        editor_code_from_ui = st_monaco(
+            value=st.session_state.editor_code,
+            language="python",
+            height="500px",
+        )
+        
+        # The submit button for the form
+        submit_button = st.form_submit_button("💾 Apply Manual Changes", help="Click to save changes before running simulation")
+
+    # Handle the form submission
+    if submit_button:
+        if editor_code_from_ui is not None:
+            st.session_state.editor_code = editor_code_from_ui
+            st.session_state.circuit_code = editor_code_from_ui
+            st.success("Changes applied! You can now run the simulation from the sidebar or chat tab.")
+
+    # Ensure a default placeholder is present if the editor is completely empty
+    if not st.session_state.editor_code or not str(st.session_state.editor_code).strip():
+        st.session_state.editor_code = """# Enter circuit code here...
+from PySpice.Spice.Netlist import Circuit
+from PySpice.Unit import *
+
+circuit = Circuit('RC_Circuit_Verified')
+circuit.V('input', 'in', circuit.gnd, 9 @ u_V) # VERIFIED: 9V
+circuit.R(1, 'in', 'out', 1 @ u_kOhm)
+circuit.C(1, 'out', circuit.gnd, 2 @ u_uF) # VERIFIED: 2uF
+
+simulator = circuit.simulator()
+analysis = simulator.transient(step_time=0.1 @ u_ms, end_time=10 @ u_ms)
+"""
 
     # Debug/Automation controls (now AFTER editor is initialized, so editor_code is available)
     if debug_mode:
@@ -535,10 +559,6 @@ analysis = simulator.transient(step_time=1 @ u_ms, end_time=10 @ u_ms)
                 st.success(f"✅ Saved {len(editor_code)} chars to session state")
             else:
                 st.warning("⚠️ Editor is empty")
-
-    # Only update session state from editor when explicitly requested
-    # (e.g., when "Sync to Session" button is clicked or Run Simulation runs)
-    # This prevents the editor from clearing session state on render
 
     # Show current code state below editor (for verification)
     if debug_mode:
@@ -603,7 +623,7 @@ with st.sidebar:
                 import time
                 time.sleep(0.5)  # Small delay to show validation message
 
-            with st.spinner("⚡ Running Ngspice simulation...\n(This may take 10-30 seconds depending on circuit complexity)"):
+            with st.spinner("⚡ Running Ngspice simulation...\\n(This may take 10-30 seconds depending on circuit complexity)"):
                 try:
                     builder = CircuitBuilder()
                     # Run simulation from editor code (source of truth)
@@ -623,7 +643,7 @@ with st.sidebar:
                                 llm_model=st.session_state.ollama_model,
                                 provider=st.session_state.llm_provider
                             )
-                            st.error(f"❌ Circuit Simulation Error\n\n{error_msg}")
+                            st.error(f"❌ Circuit Simulation Error\\n\\n{error_msg}")
                             st.warning("💡 This is a PySpice initialization issue. Try refreshing the page.")
                             st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
                         elif 'convergence' in error_msg.lower() or 'singular' in error_msg.lower():
@@ -634,7 +654,7 @@ with st.sidebar:
                                 llm_model=st.session_state.ollama_model,
                                 provider=st.session_state.llm_provider
                             )
-                            st.error(f"❌ Simulation Failed\n\n{error_msg}")
+                            st.error(f"❌ Simulation Failed\\n\\n{error_msg}")
                             st.info("💡 Try adjusting component values or simulation parameters.")
                             st.session_state.chat_history.append(('assistant', f'❌ Simulation failed: {error_msg}'))
                         else:

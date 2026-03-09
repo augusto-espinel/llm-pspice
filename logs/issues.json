@@ -1086,5 +1086,25 @@
     "status": "open",
     "attempts": 0,
     "fix_attempt": null
+  },
+  {
+    "timestamp": "2026-03-09T22:05:58.010716",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "âŒ Circuit validation failed:\n\nMissing analysis assignment (should be: analysis = variable.function().transient(...) or analysis = variable.function().ac(...))",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "OpenRouter"
+    }
+  },
+  {
+    "timestamp": "2026-03-09T22:06:46.728110",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "âŒ Circuit validation failed:\n\nMissing analysis assignment (should be: analysis = variable.function().transient(...) or analysis = variable.function().ac(...))",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "OpenRouter"
+    }
   }
 ]
