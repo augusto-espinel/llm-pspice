@@ -368,19 +368,20 @@ with chat_tab:
         with st.expander("👁️ Preview pending payload", expanded=True):
             try:
                 current_payload = expert_mode.load_pending_request()
-                preview_json = json.dumps(current_payload, indent=2, ensure_ascii=False)
+                # Pretty-print with real line breaks inside strings (for readability)
+                preview_json = json.dumps(current_payload, indent=2, ensure_ascii=False).replace('\\n', '\n')
             except Exception as e:
                 current_payload = {"error": str(e)}
                 preview_json = json.dumps(current_payload, indent=2)
 
             if not st.session_state.expert_edit_active:
-                # ── View mode: clean, read-only JSON ──
+                # ── View mode: clean, read-only JSON with real line breaks ──
                 st.code(preview_json, language="json")
                 if st.button("Edit Preview (JSON)", key="expert_start_edit"):
                     st.session_state.expert_edit_active = True
                     st.rerun()
             else:
-                # ── Edit mode: editable text area ──
+                # ── Edit mode: editable text area with real line breaks ──
                 edited_payload = st.text_area(
                     "Edit the JSON payload below:",
                     value=preview_json,

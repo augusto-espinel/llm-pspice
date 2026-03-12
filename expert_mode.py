@@ -103,11 +103,28 @@ def get_log_count() -> int:
 def write_pending_from_text(text: str) -> dict:
     """
     Validate JSON text and write it to pending_request.json.
+    Handles text where \\n was expanded to real newlines for display —
+    re-escapes newlines inside JSON string values before parsing.
     Returns {"ok": True, "path": "..."} on success or {"ok": False, "error": "..."} on failure.
     """
     ensure_dir()
     try:
-        data = json.loads(text)
+        # First try parsing as-is (valid JSON with real newlines in strings is fine)
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            # If that fails, the user may have real newlines inside string values
+            # that were expanded from \\n for display. Try re-escaping newlines
+            # that appear inside quoted strings.
+            import re
+            def re_escape_newlines(match):
+                """Re-escape newlines inside JSON string values."""
+                s = match.group(0)
+                return s.replace('\n', '\\n')
+            # Match JSON strings (handles escaped quotes inside)
+            fixed = re.sub(r'"(?:[^"\\]|\\.)*"', re_escape_newlines, text, flags=re.DOTALL)
+            data = json.loads(fixed)
+
         if not isinstance(data, dict):
             return {"ok": False, "error": "Payload must be a JSON object (not array or primitive)"}
         with open(PENDING_FILE, "w", encoding="utf-8") as f:
