@@ -193,6 +193,8 @@ if 'expert_pending_prompt' not in st.session_state:
     st.session_state.expert_pending_prompt = None  # Original user prompt
 if 'expert_endpoint_info' not in st.session_state:
     st.session_state.expert_endpoint_info = None
+if 'expert_edit_active' not in st.session_state:
+    st.session_state.expert_edit_active = False  # False = view mode, True = edit mode
 # Track conversation for context
 MAX_CHAT_HISTORY = 10  # Keep last 10 turns to manage token usage
 
@@ -362,13 +364,43 @@ with chat_tab:
         st.warning(f"🔧 **Expert Mode** — Payload waiting on disk. Edit it if needed, then press Launch.")
         st.caption(f"📄 `{expert_mode.PENDING_FILE}`")
 
-        # Show current payload for reference
-        with st.expander("👁️ Preview pending payload"):
+        # Show current payload — view/edit toggle
+        with st.expander("👁️ Preview pending payload", expanded=True):
             try:
                 current_payload = expert_mode.load_pending_request()
-                st.json(current_payload)
+                preview_json = json.dumps(current_payload, indent=2, ensure_ascii=False)
             except Exception as e:
-                st.error(f"Could not read payload: {e}")
+                current_payload = {"error": str(e)}
+                preview_json = json.dumps(current_payload, indent=2)
+
+            if not st.session_state.expert_edit_active:
+                # ── View mode: clean, read-only JSON ──
+                st.code(preview_json, language="json")
+                if st.button("Edit Preview (JSON)", key="expert_start_edit"):
+                    st.session_state.expert_edit_active = True
+                    st.rerun()
+            else:
+                # ── Edit mode: editable text area ──
+                edited_payload = st.text_area(
+                    "Edit the JSON payload below:",
+                    value=preview_json,
+                    height=300,
+                    key="expert_payload_editor"
+                )
+                col_save, col_discard = st.columns(2)
+                with col_save:
+                    if st.button("💾 Save & close", key="expert_save_preview"):
+                        result = expert_mode.write_pending_from_text(edited_payload)
+                        if result["ok"]:
+                            st.session_state.expert_edit_active = False
+                            st.success(f"✅ Saved to `{result['path']}`")
+                            st.rerun()
+                        else:
+                            st.error(f"❌ {result['error']}")
+                with col_discard:
+                    if st.button("❌ Discard changes", key="expert_discard_edit"):
+                        st.session_state.expert_edit_active = False
+                        st.rerun()
 
         col_launch, col_cancel = st.columns(2)
         with col_launch:

@@ -7,7 +7,7 @@
     },
     {
       "role": "user",
-      "content": "Design a voltage divider with 12V input"
+      "content": "Simulate a low-pass filter with cutoff 1kHz"
     }
   ],
   "temperature": 0.7,

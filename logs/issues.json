@@ -1147,5 +1147,15 @@
       "provider": "OpenRouter",
       "context": "Empty response received from LLM"
     }
+  },
+  {
+    "timestamp": "2026-03-12T15:37:03.599173",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "name 'pi' is not defined",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "OpenRouter"
+    }
   }
 ]

@@ -98,3 +98,22 @@ def get_log() -> list:
 
 def get_log_count() -> int:
     return len(get_log())
+
+
+def write_pending_from_text(text: str) -> dict:
+    """
+    Validate JSON text and write it to pending_request.json.
+    Returns {"ok": True, "path": "..."} on success or {"ok": False, "error": "..."} on failure.
+    """
+    ensure_dir()
+    try:
+        data = json.loads(text)
+        if not isinstance(data, dict):
+            return {"ok": False, "error": "Payload must be a JSON object (not array or primitive)"}
+        with open(PENDING_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return {"ok": True, "path": os.path.abspath(PENDING_FILE)}
+    except json.JSONDecodeError as e:
+        return {"ok": False, "error": f"Invalid JSON: {e}"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
