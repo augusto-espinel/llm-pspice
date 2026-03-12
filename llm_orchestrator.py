@@ -29,6 +29,157 @@ class LLMOrchestrator:
             if 'model_name' in str(e) or 'use_cloud' in str(e):
                 raise TypeError(f"LLMOrchestrator initialization error: {str(e)}\n\nThis might be due to Python module caching. Try restarting your Streamlit app.")
             raise
+
+    # ── Expert Mode helpers ──────────────────────────────────────────────
+
+    def build_payload(self, user_request, chat_history=None, circuit_context=None):
+        """
+        Build the full API payload dict WITHOUT sending it.
+        Used by Expert Mode to write the JSON to disk for editing.
+        Returns (payload_dict, endpoint_info_dict).
+        """
+        system_prompt = self._get_system_prompt()
+
+        if self.provider == "ollama" and self.use_cloud:
+            return self._build_ollama_cloud_payload(user_request, system_prompt, chat_history, circuit_context)
+        elif self.provider in ["openai", "deepseek", "openrouter", "ollama"]:
+            return self._build_openai_payload(user_request, system_prompt, chat_history, circuit_context)
+        elif self.provider == "gemini":
+            # Gemini uses a different SDK; expose what we can
+            return self._build_gemini_payload(user_request, system_prompt, chat_history, circuit_context)
+        elif self.provider == "claude":
+            return self._build_claude_payload(user_request, system_prompt, chat_history, circuit_context)
+        else:
+            return {"error": "unsupported provider"}, {}
+
+    def send_payload(self, payload, endpoint_info=None):
+        """
+        Send an (optionally hand-edited) payload dict.
+        Returns the response text.
+        """
+        endpoint_info = endpoint_info or {}
+        provider = endpoint_info.get("provider", self.provider)
+
+        try:
+            if provider == "ollama" and endpoint_info.get("use_cloud"):
+                return self._send_ollama_cloud_payload(payload)
+            elif provider in ["openai", "deepseek", "openrouter", "ollama"]:
+                return self._send_openai_payload(payload)
+            elif provider == "gemini":
+                return self._send_gemini_payload(payload)
+            elif provider == "claude":
+                return self._send_claude_payload(payload)
+            else:
+                return "❌ Unsupported provider for expert-mode send"
+        except Exception as e:
+            return f"❌ Expert-mode send error: {str(e)}"
+
+    # ── payload builders (no network) ────────────────────────────────────
+
+    def _build_openai_payload(self, user_request, system_prompt, chat_history=None, circuit_context=None):
+        model_map = {
+            "openai": "gpt-3.5-turbo",
+            "deepseek": "deepseek-chat",
+            "openrouter": self.model_name or "openai/gpt-3.5-turbo",
+            "ollama": self.model_name or "llama3",
+        }
+        model = model_map.get(self.provider, "gpt-3.5-turbo")
+
+        messages = [{"role": "system", "content": system_prompt}]
+        if chat_history:
+            messages.extend([{"role": role, "content": msg} for role, msg in chat_history])
+        if circuit_context:
+            messages.append({"role": "system", "content": circuit_context})
+        messages.append({"role": "user", "content": user_request})
+
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 1000,
+        }
+        info = {"provider": self.provider, "use_cloud": False, "format": "openai"}
+        return payload, info
+
+    def _build_ollama_cloud_payload(self, user_request, system_prompt, chat_history=None, circuit_context=None):
+        model_name = self.model_name or "glm-4.7"
+        messages = [{"role": "system", "content": system_prompt}]
+        if chat_history:
+            messages.extend([{"role": role, "content": msg} for role, msg in chat_history])
+        if circuit_context:
+            messages.append({"role": "system", "content": circuit_context})
+        messages.append({"role": "user", "content": user_request})
+
+        payload = {
+            "model": model_name,
+            "messages": messages,
+            "stream": False,
+            "options": {"num_predict": 1000, "temperature": 0.7},
+        }
+        info = {"provider": "ollama", "use_cloud": True, "format": "ollama_cloud"}
+        return payload, info
+
+    def _build_gemini_payload(self, user_request, system_prompt, chat_history=None, circuit_context=None):
+        prompt_parts = [system_prompt]
+        if chat_history:
+            for role, msg in chat_history:
+                prompt_parts.append(f"\n{role.capitalize()}: {msg}")
+        if circuit_context:
+            prompt_parts.append(f"\n{circuit_context}")
+        prompt_parts.append(f"\nUser: {user_request}")
+
+        payload = {"prompt": "\n".join(prompt_parts), "model": "gemini-pro"}
+        info = {"provider": "gemini", "format": "gemini"}
+        return payload, info
+
+    def _build_claude_payload(self, user_request, system_prompt, chat_history=None, circuit_context=None):
+        messages = []
+        if chat_history:
+            messages.extend([{"role": role, "content": msg} for role, msg in chat_history])
+        if circuit_context:
+            messages.append({"role": "user", "content": circuit_context})
+        messages.append({"role": "user", "content": user_request})
+
+        payload = {
+            "model": "claude-3-sonnet-20240229",
+            "max_tokens": 1000,
+            "temperature": 0.7,
+            "system": system_prompt,
+            "messages": messages,
+        }
+        info = {"provider": "claude", "format": "claude"}
+        return payload, info
+
+    # ── payload senders (network) ────────────────────────────────────────
+
+    def _send_openai_payload(self, payload):
+        response = self.client.chat.completions.create(**payload)
+        return response.choices[0].message.content
+
+    def _send_ollama_cloud_payload(self, payload):
+        import requests as _req
+        url = f"{self.ollama_cloud_base_url}/api/chat"
+        headers = {
+            "Authorization": f"Bearer {self.ollama_api_key}",
+            "Content-Type": "application/json",
+        }
+        resp = _req.post(url, json=payload, headers=headers, timeout=120)
+        if resp.status_code == 200:
+            return resp.json().get("message", {}).get("content", "")
+        raise Exception(f"Status {resp.status_code}: {resp.text[:300]}")
+
+    def _send_gemini_payload(self, payload):
+        import google.generativeai as genai
+        genai.configure(api_key=self.api_key or os.getenv("GEMINI_API_KEY"))
+        model = genai.GenerativeModel(payload.get("model", "gemini-pro"))
+        response = model.generate_content(payload["prompt"])
+        return response.text
+
+    def _send_claude_payload(self, payload):
+        import anthropic
+        client = anthropic.Anthropic(api_key=self.api_key or os.getenv("CLAUDE_API_KEY"))
+        message = client.messages.create(**payload)
+        return message.content[0].text
     
     def _init_client(self):
         """Initialize the appropriate client based on provider"""

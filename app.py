@@ -21,6 +21,7 @@ from circuit_builder import CircuitBuilder
 from llm_orchestrator import LLMOrchestrator
 from app_logger import get_logger, log_empty, log_simulation_error, log_invalid_circuit, log_api_error, log_timeout, log_no_code_block, log_syntax_error, log_response_duplication
 from sim_config import get_data_dir, get_simulation_dir
+import expert_mode
 from datetime import datetime
 import io
 import sys
@@ -183,6 +184,15 @@ if 'use_custom_model' not in st.session_state:
 # Track if user has explicitly selected a model (prevent auto-reset)
 if 'user_has_selected_model' not in st.session_state:
     st.session_state.user_has_selected_model = False
+# Expert Mode state
+if 'expert_mode' not in st.session_state:
+    st.session_state.expert_mode = False
+if 'expert_pending' not in st.session_state:
+    st.session_state.expert_pending = False  # True while waiting for user to press Send
+if 'expert_pending_prompt' not in st.session_state:
+    st.session_state.expert_pending_prompt = None  # Original user prompt
+if 'expert_endpoint_info' not in st.session_state:
+    st.session_state.expert_endpoint_info = None
 # Track conversation for context
 MAX_CHAT_HISTORY = 10  # Keep last 10 turns to manage token usage
 
@@ -346,6 +356,97 @@ with chat_tab:
             # Rerun to show results
             st.rerun()
 
+    # ── Expert Mode: Launch button (shown when a payload is pending) ──
+    if st.session_state.expert_mode and st.session_state.expert_pending:
+        st.markdown("---")
+        st.warning(f"🔧 **Expert Mode** — Payload waiting on disk. Edit it if needed, then press Launch.")
+        st.caption(f"📄 `{expert_mode.PENDING_FILE}`")
+
+        # Show current payload for reference
+        with st.expander("👁️ Preview pending payload"):
+            try:
+                current_payload = expert_mode.load_pending_request()
+                st.json(current_payload)
+            except Exception as e:
+                st.error(f"Could not read payload: {e}")
+
+        col_launch, col_cancel = st.columns(2)
+        with col_launch:
+            if st.button("🚀 Launch", key="expert_launch", type="primary", use_container_width=True):
+                try:
+                    payload = expert_mode.load_pending_request()
+                    if not isinstance(payload, dict):
+                        raise ValueError("Payload must be a JSON object")
+
+                    endpoint_info = st.session_state.expert_endpoint_info or {}
+                    provider = st.session_state.llm_provider
+                    provider_key = provider.lower().replace(" ", "")
+
+                    # Initialize orchestrator
+                    if provider == "Ollama":
+                        llm = LLMOrchestrator(
+                            provider=provider_key,
+                            model_name=st.session_state.ollama_model,
+                            use_cloud=st.session_state.ollama_use_cloud,
+                            api_key=st.session_state.ollama_api_key if st.session_state.ollama_use_cloud else None
+                        )
+                    else:
+                        model_name = st.session_state.openrouter_model if provider == "OpenRouter" else None
+                        llm = LLMOrchestrator(
+                            provider=provider_key,
+                            api_key=st.session_state.api_key,
+                            model_name=model_name
+                        )
+
+                    with st.spinner("🚀 Sending expert payload..."):
+                        response = llm.send_payload(payload, endpoint_info)
+
+                    # Log to expert-only log
+                    entry_num = expert_mode.log_exchange(
+                        request_payload=payload,
+                        response_text=response,
+                        model=payload.get("model", "unknown"),
+                        provider=provider,
+                        user_prompt=st.session_state.expert_pending_prompt or ""
+                    )
+
+                    st.success(f"✅ Expert response received (log entry #{entry_num})")
+
+                    # Feed response back into normal chat flow
+                    st.session_state.chat_history.append(('assistant', response))
+                    st.session_state.chat_messages.append(('user', st.session_state.expert_pending_prompt or ""))
+                    st.session_state.chat_messages.append(('assistant', response))
+
+                    # Parse code blocks like normal flow
+                    if '```python' in response and '```' in response:
+                        parts = response.split('```')
+                        for part in parts:
+                            if part.startswith('python'):
+                                code = part[6:].strip()
+                                st.session_state.circuit_code = code
+                                st.session_state.editor_code = code
+                                break
+
+                    # Clear pending state
+                    st.session_state.expert_pending = False
+                    st.session_state.expert_pending_prompt = None
+                    st.session_state.expert_endpoint_info = None
+                    expert_mode.clear_pending()
+                    st.rerun()
+
+                except json.JSONDecodeError as e:
+                    st.error(f"❌ Invalid JSON in pending_request.json: {e}\n\nFix the file and try again.")
+                except Exception as e:
+                    st.error(f"❌ Launch failed: {e}")
+
+        with col_cancel:
+            if st.button("❌ Cancel", key="expert_cancel", use_container_width=True):
+                st.session_state.expert_pending = False
+                st.session_state.expert_pending_prompt = None
+                st.session_state.expert_endpoint_info = None
+                expert_mode.clear_pending()
+                st.rerun()
+
     # User input
     user_input = st.chat_input("Describe the circuit you want to build...")
 
@@ -411,6 +512,19 @@ with chat_tab:
                 circuit_context = None
                 if st.session_state.last_simulated_code:
                     circuit_context = f"Current working circuit code (successfully simulated):\\n```python\\n{st.session_state.last_simulated_code}\\n```\\n\\nFor modifications, update this code appropriately."
+
+                # ── Expert Mode: save payload to disk and wait for Launch ──
+                if st.session_state.expert_mode:
+                    # Build payload without sending
+                    payload, endpoint_info = llm.build_payload(
+                        user_input, chat_history=chat_messages, circuit_context=circuit_context
+                    )
+                    filepath = expert_mode.save_pending_request(payload)
+                    st.session_state.expert_pending = True
+                    st.session_state.expert_pending_prompt = user_input
+                    st.session_state.expert_endpoint_info = endpoint_info
+                    st.info(f"🔧 **Expert Mode:** Payload saved to:\n`{filepath}`\n\nEdit the JSON file if you want, then press **🚀 Launch** below.")
+                    st.rerun()
 
                 response = llm.process_request(user_input, chat_history=chat_messages, circuit_context=circuit_context)
 
@@ -730,6 +844,34 @@ with st.sidebar:
     st.markdown("---")
 
     st.header("⚙️ Settings")
+
+    # ── Expert Mode toggle ──
+    st.subheader("🔧 Expert Mode")
+    expert_toggle = st.checkbox(
+        "Enable Expert Mode",
+        value=st.session_state.expert_mode,
+        help="When ON, the LLM payload is saved to disk before sending. "
+             "You can edit the JSON file, then press Launch to send it."
+    )
+    st.session_state.expert_mode = expert_toggle
+
+    if expert_toggle:
+        st.caption(f"Payload file: `expert_mode/pending_request.json`")
+        st.caption(f"Log file: `expert_mode/log.json`")
+
+        # Show log count
+        log_count = expert_mode.get_log_count()
+        if log_count > 0:
+            st.info(f"📋 {log_count} expert exchange(s) logged")
+            with st.expander("📜 View Expert Log"):
+                logs = expert_mode.get_log()
+                for i, entry in enumerate(reversed(logs[-10:])):  # Show last 10
+                    st.markdown(f"**#{log_count - i}** — {entry.get('timestamp', '?')} — `{entry.get('model', '?')}`")
+                    st.caption(f"Prompt: {entry.get('user_prompt', '?')[:100]}...")
+                    with st.expander(f"Details #{log_count - i}"):
+                        st.json(entry)
+
+    st.markdown("---")
 
     st.subheader("LLM Configuration")
     provider = st.selectbox(

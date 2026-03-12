@@ -1106,5 +1106,46 @@
       "llm_model": "deepseek-r1:8b",
       "provider": "OpenRouter"
     }
+  },
+  {
+    "timestamp": "2026-03-09T22:46:59.318927",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "Number of args mismatch",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "Ollama"
+    }
+  },
+  {
+    "timestamp": "2026-03-09T22:48:14.933520",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "name 'u_mH' is not defined",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "OpenRouter"
+    }
+  },
+  {
+    "timestamp": "2026-03-09T22:48:52.377652",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "âŒ Circuit validation failed:\n\nMissing simulation method (.transient() or .ac())",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "OpenRouter"
+    }
+  },
+  {
+    "timestamp": "2026-03-11T23:02:57.955678",
+    "prompt": "design a diode bridge rectifier",
+    "issue_type": "empty_output",
+    "error_message": "",
+    "metadata": {
+      "llm_model": "OpenRouter",
+      "provider": "OpenRouter",
+      "context": "Empty response received from LLM"
+    }
   }
 ]
