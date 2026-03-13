@@ -1157,5 +1157,15 @@
       "llm_model": "deepseek-r1:8b",
       "provider": "OpenRouter"
     }
+  },
+  {
+    "timestamp": "2026-03-13T00:35:48.889677",
+    "prompt": "Run Simulation button click",
+    "issue_type": "simulation_error",
+    "error_message": "Number of args mismatch",
+    "metadata": {
+      "llm_model": "deepseek-r1:8b",
+      "provider": "Ollama"
+    }
   }
 ]
