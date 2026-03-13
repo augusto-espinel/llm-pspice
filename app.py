@@ -582,14 +582,18 @@ with chat_tab:
                 # Guard against null/empty LLM response
                 if response is None:
                     response = ""
-                if not response or not response.strip():
+                if not response or not isinstance(response, str) or not response.strip():
                     log_empty(
                         prompt=user_input,
                         llm_model=st.session_state.ollama_model if provider == "Ollama" else provider,
                         provider=provider,
-                        context="Empty response received from LLM"
+                        context="Empty or non-string response received from LLM"
                     )
-                    st.error("❌ Empty response from LLM. This issue has been logged for debugging.")
+                    st.error("❌ LLM returned no usable response (empty or non-text). This issue has been logged for debugging.")
+                    # Do not attempt to parse or simulate on this turn
+                    st.session_state.chat_history.append(('assistant', '❌ LLM returned no usable response for this prompt. Please try again or adjust the request.'))
+                    st.session_state.chat_messages.append(('assistant', '❌ LLM returned no usable response for this prompt.'))
+                    st.stop()
 
                 # Parse response to avoid code duplication
                 # If response contains python code block, split it: text + code separately

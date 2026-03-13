@@ -160,5 +160,79 @@
       "max_tokens": 1000
     },
     "response": null
+  },
+  {
+    "timestamp": "2026-03-13T11:36:12.776618",
+    "provider": "OpenRouter",
+    "model": "google/gemini-3.1-pro-preview",
+    "user_prompt": "create a diode bridge rectifier",
+    "request_payload": {
+      "model": "google/gemini-3.1-pro-preview",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert circuit designer and electrical engineer.\n\nYour task is to design electronic circuits based on user requests and generate Python code using PySpice that creates and simulates the circuit.\n\nCRITICAL: You MUST always generate a response with Python code in a ```python``` block.\nNever respond with just text - always include working circuit code.\n\n\nSIMULATION BEST PRACTICES:\n1. Include a DC path to ground for every node\n2. Use realistic component values (avoid 0 or extremely large values)\n3. Set appropriate simulation parameters:\n   - step_time: 0.1 to 1 us for typical circuits\n   - end_time: 1 to 10 ms to see transient behavior\n4. For transient analysis, use pulse sources instead of DC to see charging behavior\n\n\nIMPORTANT RULES:\n1. Use PySpice library symbols:\n   - Circuit() - creates a circuit object\n   - u_Ohm, u_kOhm - resistance units (note: not u_MOhm)\n   - u_V - voltage units\n   - u_mA, u_A - current units\n   - u_F, u_nF, u_pF - capacitance units (note: not u_uF, use u_nF for nano-farads)\n   - u_H - inductance units\n   - u_s, u_ms, u_us - time units\n\n2. Circuit components:\n   - Circuit.V('name', 'node+', 'node-', voltage @ u_V) - DC voltage source\n   - Circuit.PulseVoltageSource('name', 'node+', 'node-', initial_value @ u_V, pulsed_value @ u_V, pulse_width @ u_ms, period @ u_ms, delay_time @ u_ms, rise_time @ u_ms, fall_time @ u_ms) - pulse source for transient analysis\n   - Circuit.R('name', 'node+', 'node-', resistance @ u_Ohm) - resistor\n   - Circuit.C('name', 'node+', 'node-', capacitance @ u_F) - capacitor\n   - Circuit.L('name', 'node+', 'node-', inductance @ u_H) - inductor\n\n3. Simulation:\n   - Create simulator: simulator = circuit.simulator()\n   - Run analysis: analysis = simulator.transient(step_time=..., end_time=...)\n   - Analysis must be stored in variable 'analysis'\n\n4. Code format:\n   - Create a 'circuit' variable containing the Circuit object\n   - Create an 'analysis' variable containing the simulation results\n   - Wrap code in ```python``` block\n   - Include comments explaining the circuit\n\n5. Analysis parameters:\n   - step_time: Typically 0.1 to 1 us (use @ u_us)\n   - end_time: Typically 1 to 10 ms (use @ u_ms)\n\nExample response format:\n```python\n# RC low-pass filter circuit with pulse source\nfrom PySpice.Spice.Netlist import Circuit\nfrom PySpice.Unit import *\n\ncircuit = Circuit('RC_Filter')\n# Pulse source: 0V to 10V step, 1ms pulse width, 2ms period\ncircuit.PulseVoltageSource('input', 'n1', circuit.gnd,\n    initial_value=0 @ u_V,\n    pulsed_value=10 @ u_V,\n    pulse_width=1 @ u_ms,\n    period=2 @ u_ms,\n    delay_time=0.001 @ u_ms,\n    rise_time=0.001 @ u_ms,\n    fall_time=0.001 @ u_ms)\ncircuit.R(1, 'n1', 'n2', 1 @ u_kOhm)\ncircuit.C(1, 'n2', circuit.gnd, 10 @ u_nF)\n\nsimulator = circuit.simulator()\nanalysis = simulator.transient(step_time=1 @ u_us, end_time=10 @ u_ms)\n```\n\nDesign safe, practical circuits. If uncertain about values, use common standard values and explain your design choices."
+        },
+        {
+          "role": "user",
+          "content": "create a diode bridge rectifier"
+        }
+      ],
+      "temperature": 0.7,
+      "max_tokens": 1000
+    },
+    "response": "This is a classic full-wave diode bridge rectifier circuit. It uses four diodes arranged in a bridge configuration to convert an Alternating Current (AC) input into a Direct Current (DC) output"
+  },
+  {
+    "timestamp": "2026-03-13T18:14:41.648358",
+    "provider": "OpenRouter",
+    "model": "openai/gpt-3.5-turbo",
+    "user_prompt": "create a diode bridge rectifier",
+    "request_payload": {
+      "model": "openai/gpt-3.5-turbo",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert circuit designer and electrical engineer.\n\nYour task is to design electronic circuits based on user requests and generate Python code using PySpice that creates and simulates the circuit.\n\nCRITICAL: You MUST always generate a response with Python code in a ```python``` block.\nNever respond with just text - always include working circuit code.\n\n\nSIMULATION BEST PRACTICES:\n1. Include a DC path to ground for every node\n2. Use realistic component values (avoid 0 or extremely large values)\n3. Set appropriate simulation parameters:\n   - step_time: 0.1 to 1 us for typical circuits\n   - end_time: 1 to 10 ms to see transient behavior\n4. For transient analysis, use pulse sources instead of DC to see charging behavior\n\n\nIMPORTANT RULES:\n1. Use PySpice library symbols:\n   - Circuit() - creates a circuit object\n   - u_Ohm, u_kOhm - resistance units (note: not u_MOhm)\n   - u_V - voltage units\n   - u_mA, u_A - current units\n   - u_F, u_nF, u_pF - capacitance units (note: not u_uF, use u_nF for nano-farads)\n   - u_H - inductance units\n   - u_s, u_ms, u_us - time units\n\n2. Circuit components:\n   - Circuit.V('name', 'node+', 'node-', voltage @ u_V) - DC voltage source\n   - Circuit.PulseVoltageSource('name', 'node+', 'node-', initial_value @ u_V, pulsed_value @ u_V, pulse_width @ u_ms, period @ u_ms, delay_time @ u_ms, rise_time @ u_ms, fall_time @ u_ms) - pulse source for transient analysis\n   - Circuit.R('name', 'node+', 'node-', resistance @ u_Ohm) - resistor\n   - Circuit.C('name', 'node+', 'node-', capacitance @ u_F) - capacitor\n   - Circuit.L('name', 'node+', 'node-', inductance @ u_H) - inductor\n\n3. Simulation:\n   - Create simulator: simulator = circuit.simulator()\n   - Run analysis: analysis = simulator.transient(step_time=..., end_time=...)\n   - Analysis must be stored in variable 'analysis'\n\n4. Code format:\n   - Create a 'circuit' variable containing the Circuit object\n   - Create an 'analysis' variable containing the simulation results\n   - Wrap code in ```python``` block\n   - Include comments explaining the circuit\n\n5. Analysis parameters:\n   - step_time: Typically 0.1 to 1 us (use @ u_us)\n   - end_time: Typically 1 to 10 ms (use @ u_ms)\n\nExample response format:\n```python\n# RC low-pass filter circuit with pulse source\nfrom PySpice.Spice.Netlist import Circuit\nfrom PySpice.Unit import *\n\ncircuit = Circuit('RC_Filter')\n# Pulse source: 0V to 10V step, 1ms pulse width, 2ms period\ncircuit.PulseVoltageSource('input', 'n1', circuit.gnd,\n    initial_value=0 @ u_V,\n    pulsed_value=10 @ u_V,\n    pulse_width=1 @ u_ms,\n    period=2 @ u_ms,\n    delay_time=0.001 @ u_ms,\n    rise_time=0.001 @ u_ms,\n    fall_time=0.001 @ u_ms)\ncircuit.R(1, 'n1', 'n2', 1 @ u_kOhm)\ncircuit.C(1, 'n2', circuit.gnd, 10 @ u_nF)\n\nsimulator = circuit.simulator()\nanalysis = simulator.transient(step_time=1 @ u_us, end_time=10 @ u_ms)\n```\n\nDesign safe, practical circuits. If uncertain about values, use common standard values and explain your design choices."
+        },
+        {
+          "role": "user",
+          "content": "create a diode bridge rectifier"
+        }
+      ],
+      "temperature": 0.7,
+      "max_tokens": 1000
+    },
+    "response": "```python\n# Diode bridge rectifier circuit\nfrom PySpice.Spice.Netlist import Circuit\nfrom PySpice.Unit import *\n\ncircuit = Circuit('Diode_Bridge_Rectifier')\ncircuit.V(1, 'in', circuit.gnd, 10 @ u_V)  # Input AC voltage source\ncircuit.R(1, 'in', 1, 1 @ u_kOhm)  # Input series resistor\ncircuit.D(1, 1, 2)  # Diode 1\ncircuit.D(2, 2, 'out')  # Diode 2\ncircuit.D(3, 'out', 4)  # Diode 3\ncircuit.D(4, 4, circuit.gnd)  # Diode 4\ncircuit.R(2, 2, 3, 1 @ u_kOhm)  # Load resistor\n\nsimulator = circuit.simulator()\nanalysis = simulator.transient(step_time=1 @ u_us, end_time=10 @ u_ms)\n```"
+  },
+  {
+    "timestamp": "2026-03-13T18:23:58.213843",
+    "provider": "OpenRouter",
+    "model": "openai/gpt-3.5-turbo",
+    "user_prompt": "add a capacitor at the output of the diode bridge",
+    "request_payload": {
+      "model": "openai/gpt-3.5-turbo",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert circuit designer and electrical engineer.\n\nYour task is to design electronic circuits based on user requests and generate Python code using PySpice that creates and simulates the circuit.\n\nCRITICAL: You MUST always generate a response with Python code in a ```python``` block.\nNever respond with just text - always include working circuit code.\n\n\nSIMULATION BEST PRACTICES:\n1. Include a DC path to ground for every node\n2. Use realistic component values (avoid 0 or extremely large values)\n3. Set appropriate simulation parameters:\n   - step_time: 0.1 to 1 us for typical circuits\n   - end_time: 1 to 10 ms to see transient behavior\n4. For transient analysis, use pulse sources instead of DC to see charging behavior\n\n\nIMPORTANT RULES:\n1. Use PySpice library symbols:\n   - Circuit() - creates a circuit object\n   - u_Ohm, u_kOhm - resistance units (note: not u_MOhm)\n   - u_V - voltage units\n   - u_mA, u_A - current units\n   - u_F, u_nF, u_pF - capacitance units (note: not u_uF, use u_nF for nano-farads)\n   - u_H - inductance units\n   - u_s, u_ms, u_us - time units\n\n2. Circuit components:\n   - Circuit.V('name', 'node+', 'node-', voltage @ u_V) - DC voltage source\n   - Circuit.PulseVoltageSource('name', 'node+', 'node-', initial_value @ u_V, pulsed_value @ u_V, pulse_width @ u_ms, period @ u_ms, delay_time @ u_ms, rise_time @ u_ms, fall_time @ u_ms) - pulse source for transient analysis\n   - Circuit.R('name', 'node+', 'node-', resistance @ u_Ohm) - resistor\n   - Circuit.C('name', 'node+', 'node-', capacitance @ u_F) - capacitor\n   - Circuit.L('name', 'node+', 'node-', inductance @ u_H) - inductor\n\n3. Simulation:\n   - Create simulator: simulator = circuit.simulator()\n   - Run analysis: analysis = simulator.transient(step_time=..., end_time=...)\n   - Analysis must be stored in variable 'analysis'\n\n4. Code format:\n   - Create a 'circuit' variable containing the Circuit object\n   - Create an 'analysis' variable containing the simulation results\n   - Wrap code in ```python``` block\n   - Include comments explaining the circuit\n\n5. Analysis parameters:\n   - step_time: Typically 0.1 to 1 us (use @ u_us)\n   - end_time: Typically 1 to 10 ms (use @ u_ms)\n\nExample response format:\n```python\n# RC low-pass filter circuit with pulse source\nfrom PySpice.Spice.Netlist import Circuit\nfrom PySpice.Unit import *\n\ncircuit = Circuit('RC_Filter')\n# Pulse source: 0V to 10V step, 1ms pulse width, 2ms period\ncircuit.PulseVoltageSource('input', 'n1', circuit.gnd,\n    initial_value=0 @ u_V,\n    pulsed_value=10 @ u_V,\n    pulse_width=1 @ u_ms,\n    period=2 @ u_ms,\n    delay_time=0.001 @ u_ms,\n    rise_time=0.001 @ u_ms,\n    fall_time=0.001 @ u_ms)\ncircuit.R(1, 'n1', 'n2', 1 @ u_kOhm)\ncircuit.C(1, 'n2', circuit.gnd, 10 @ u_nF)\n\nsimulator = circuit.simulator()\nanalysis = simulator.transient(step_time=1 @ u_us, end_time=10 @ u_ms)\n```\n\nDesign safe, practical circuits. If uncertain about values, use common standard values and explain your design choices."
+        },
+        {
+          "role": "user",
+          "content": "create a diode bridge rectifier"
+        },
+        {
+          "role": "assistant",
+          "content": "```python\n# Diode bridge rectifier circuit\nfrom PySpice.Spice.Netlist import Circuit\nfrom PySpice.Unit import *\n\ncircuit = Circuit('Diode_Bridge_Rectifier')\ncircuit.V(1, 'in', circuit.gnd, 10 @ u_V)  # Input AC voltage source\ncircuit.R(1, 'in', 1, 1 @ u_kOhm)  # Input series resistor\ncircuit.D(1, 1, 2)  # Diode 1\ncircuit.D(2, 2, 'out')  # Diode 2\ncircuit.D(3, 'out', 4)  # Diode 3\ncircuit.D(4, 4, circuit.gnd)  # Diode 4\ncircuit.R(2, 2, 3, 1 @ u_kOhm)  # Load resistor\n\nsimulator = circuit.simulator()\nanalysis = simulator.transient(step_time=1 @ u_us, end_time=10 @ u_ms)\n```"
+        },
+        {
+          "role": "user",
+          "content": "add a capacitor at the output of the diode bridge"
+        }
+      ],
+      "temperature": 0.7,
+      "max_tokens": 1000
+    },
+    "response": "```python\n# Diode bridge rectifier circuit with output capacitor\nfrom PySpice.Spice.Netlist import Circuit\nfrom PySpice.Unit import *\n\ncircuit = Circuit('Diode_Bridge_Rectifier_Capacitor')\ncircuit.V(1, 'in', circuit.gnd, 10 @ u_V)  # Input AC voltage source\ncircuit.R(1, 'in', 1, 1 @ u_kOhm)  # Input series resistor\ncircuit.D(1, 1, 2)  # Diode 1\ncircuit.D(2, 2, 'out')  # Diode 2\ncircuit.D(3, 'out', 4)  # Diode 3\ncircuit.D(4, 4, circuit.gnd)  # Diode 4\ncircuit.R(2, 2, 3, 1 @ u_kOhm)  # Load resistor\ncircuit.C(1, 'out', circuit.gnd, 100 @ u_uF)  # Output capacitor\n\nsimulator = circuit.simulator()\nanalysis = simulator.transient(step_time=1 @ u_us, end_time=10 @ u_ms)\n```"
   }
 ]
