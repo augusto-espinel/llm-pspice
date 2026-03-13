@@ -434,6 +434,24 @@ with chat_tab:
                     with st.spinner("🚀 Sending expert payload..."):
                         response = llm.send_payload(payload, endpoint_info)
 
+                    # Guard against null/empty LLM response
+                    if response is None or (isinstance(response, str) and response.strip() == ""):
+                        response = ""
+                        st.error("❌ LLM returned an empty response. The model may be unavailable or rate-limited. Try a different model or retry.")
+                        # Log the failure
+                        expert_mode.log_exchange(
+                            request_payload=payload,
+                            response_text=None,
+                            model=payload.get("model", "unknown"),
+                            provider=provider,
+                            user_prompt=st.session_state.expert_pending_prompt or ""
+                        )
+                        st.session_state.expert_pending = False
+                        st.session_state.expert_pending_prompt = None
+                        st.session_state.expert_endpoint_info = None
+                        expert_mode.clear_pending()
+                        st.rerun()
+
                     # Log to expert-only log
                     entry_num = expert_mode.log_exchange(
                         request_payload=payload,
@@ -451,7 +469,7 @@ with chat_tab:
                     st.session_state.chat_messages.append(('assistant', response))
 
                     # Parse code blocks like normal flow
-                    if '```python' in response and '```' in response:
+                    if isinstance(response, str) and '```python' in response and '```' in response:
                         parts = response.split('```')
                         for part in parts:
                             if part.startswith('python'):
@@ -561,7 +579,9 @@ with chat_tab:
 
                 response = llm.process_request(user_input, chat_history=chat_messages, circuit_context=circuit_context)
 
-                # Log empty response
+                # Guard against null/empty LLM response
+                if response is None:
+                    response = ""
                 if not response or not response.strip():
                     log_empty(
                         prompt=user_input,
@@ -573,7 +593,7 @@ with chat_tab:
 
                 # Parse response to avoid code duplication
                 # If response contains python code block, split it: text + code separately
-                if '```python' in response and '```' in response:
+                if isinstance(response, str) and '```python' in response and '```' in response:
                     # Extract code blocks and non-code text
                     code_blocks = []
                     parts = response.split('```')
